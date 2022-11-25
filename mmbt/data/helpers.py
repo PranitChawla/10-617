@@ -17,26 +17,30 @@ import torchvision.transforms as transforms
 from pytorch_pretrained_bert import BertTokenizer
 from torch.utils.data import DataLoader
 
-from mmbt.data.dataset import JsonlDataset
-from mmbt.data.vocab import Vocab
+from data.dataset_vilt import JsonlDataset as JsonlDataset_vilt
+from data.dataset_flava import JsonlDataset as JsonlDataset_flava
+
+from data.vocab import Vocab
+from transformers import DataCollatorWithPadding, ViltProcessor
 
 
 def get_transforms(args):
     return transforms.Compose(
         [
-            transforms.Resize(256),
-            transforms.CenterCrop(224),
-            transforms.ToTensor(),
-            transforms.Normalize(
-                mean=[0.46777044, 0.44531429, 0.40661017],
-                std=[0.12221994, 0.12145835, 0.14380469],
-            ),
+            transforms.Resize(256)
+            # transforms.CenterCrop(224),
+            # transforms.ToTensor(),
+            # transforms.Normalize(
+            #     mean=[0.46777044, 0.44531429, 0.40661017],
+            #     std=[0.12221994, 0.12145835, 0.14380469],
+            # ),
         ]
     )
 
 
 def get_labels_and_frequencies(path):
     label_freqs = Counter()
+    path = path.split('.jsonl')[0]+'_filtered'+'.jsonl'
     data_labels = [json.loads(line)["label"] for line in open(path)]
     if type(data_labels[0]) == list:
         for label_row in data_labels:
@@ -57,17 +61,17 @@ def get_glove_words(path):
 
 def get_vocab(args):
     vocab = Vocab()
-    if args.model in ["bert", "mmbt", "concatbert"]:
-        bert_tokenizer = BertTokenizer.from_pretrained(
-            args.bert_model, do_lower_case=True
-        )
-        vocab.stoi = bert_tokenizer.vocab
-        vocab.itos = bert_tokenizer.ids_to_tokens
-        vocab.vocab_sz = len(vocab.itos)
+    # if args.model in ["bert", "mmbt", "concatbert"]:
+    #     bert_tokenizer = BertTokenizer.from_pretrained(
+    #         args.bert_model, do_lower_case=True
+    #     )
+    #     vocab.stoi = bert_tokenizer.vocab
+    #     vocab.itos = bert_tokenizer.ids_to_tokens
+    #     vocab.vocab_sz = len(vocab.itos)
 
-    else:
-        word_list = get_glove_words(args.glove_path)
-        vocab.add(word_list)
+    # else:
+    #     word_list = get_glove_words(args.glove_path)
+    #     vocab.add(word_list)
 
     return vocab
 
@@ -99,6 +103,121 @@ def collate_fn(batch, args):
 
     return text_tensor, segment_tensor, mask_tensor, img_tensor, tgt_tensor
 
+
+def get_data_loaders_vilt(args):
+    args.labels, args.label_freqs = get_labels_and_frequencies(
+        os.path.join(args.data_path, args.task, "train.jsonl")
+    )
+    vocab = get_vocab(args)
+    args.vocab = vocab
+    args.vocab_sz = vocab.vocab_sz
+    args.n_classes = len(args.labels)
+
+    train = JsonlDataset(
+        os.path.join(args.data_path, args.task, "train.jsonl"),
+        vocab,
+        args,
+    )
+
+    args.train_data_len = len(train)
+
+    dev = JsonlDataset(
+        os.path.join(args.data_path, args.task, "dev.jsonl"),
+        vocab,
+        args,
+    )
+
+    # collate = functools.partial(collate_fn, args=args)
+
+    train_loader = DataLoader(
+        train,
+        batch_size=args.batch_sz,
+        shuffle=True,
+        num_workers=args.n_workers,
+        #collate_fn=collator
+    )
+
+    val_loader = DataLoader(
+        dev,
+        batch_size=args.batch_sz,
+        shuffle=False,
+        num_workers=args.n_workers,
+        #collate_fn=collator
+    )
+
+    test_set = JsonlDataset(
+        os.path.join(args.data_path, args.task, "test.jsonl"),
+        vocab,
+        args,
+        
+    )
+
+    test_loader = DataLoader(
+        test_set,
+        batch_size=args.batch_sz,
+        shuffle=False,
+        num_workers=args.n_workers,
+        #collate_fn=collator
+    )
+    return train_loader, val_loader, test_loader
+
+
+def get_data_loaders_flava(args):
+    args.labels, args.label_freqs = get_labels_and_frequencies(
+        os.path.join(args.data_path, args.task, "train.jsonl")
+    )
+    vocab = get_vocab(args)
+    args.vocab = vocab
+    args.vocab_sz = vocab.vocab_sz
+    args.n_classes = len(args.labels)
+
+    train = JsonlDataset_flava(
+        os.path.join(args.data_path, args.task, "train.jsonl"),
+        vocab,
+        args,
+    )
+
+    args.train_data_len = len(train)
+
+    dev = JsonlDataset_flava(
+        os.path.join(args.data_path, args.task, "dev.jsonl"),
+        vocab,
+        args,
+    )
+
+    # collate = functools.partial(collate_fn, args=args)
+
+    train_loader = DataLoader(
+        train,
+        batch_size=args.batch_sz,
+        shuffle=True,
+        num_workers=args.n_workers,
+        #collate_fn=collator
+    )
+
+    val_loader = DataLoader(
+        dev,
+        batch_size=args.batch_sz,
+        shuffle=False,
+        num_workers=args.n_workers,
+        #collate_fn=collator
+    )
+
+    test_set = JsonlDataset_flava(
+        os.path.join(args.data_path, args.task, "test.jsonl"),
+        vocab,
+        args,
+        
+    )
+
+    test_loader = DataLoader(
+        test_set,
+        batch_size=args.batch_sz,
+        shuffle=False,
+        num_workers=args.n_workers,
+        #collate_fn=collator
+    )
+    return train_loader, val_loader, test_loader
 
 def get_data_loaders(args):
     tokenizer = (
@@ -168,7 +287,7 @@ def get_data_loaders(args):
         num_workers=args.n_workers,
         collate_fn=collate,
     )
-
+    return train_loader, val_loader, test_loader
     if args.task == "vsnli":
         test_hard = JsonlDataset(
             os.path.join(args.data_path, args.task, "test_hard.jsonl"),

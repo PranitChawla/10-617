@@ -1,11 +1,4 @@
-#!/usr/bin/env python3
-#
-# Copyright (c) Facebook, Inc. and its affiliates.
-# All rights reserved.
-#
-# This source code is licensed under the license found in the
-# LICENSE file in the root directory of this source tree.
-#
+
 
 
 import argparse
@@ -17,16 +10,16 @@ import torch.nn as nn
 import torch.optim as optim
 from pytorch_pretrained_bert import BertAdam
 
-from data.helpers import get_data_loaders
+from data.helpers import get_data_loaders_vilt as get_data_loaders
 from models import get_model
 from utils.logger import create_logger
 from utils.utils import *
 
 
 def get_args(parser):
-    parser.add_argument("--batch_sz", type=int, default=8)
+    parser.add_argument("--batch_sz", type=int, default=256)
     parser.add_argument("--bert_model", type=str, default="bert-base-uncased", choices=["bert-base-uncased", "bert-large-uncased"])
-    parser.add_argument("--data_path", type=str, default="../")
+    parser.add_argument("--data_path", type=str, default="../../")
     parser.add_argument("--drop_img_percent", type=float, default=0.0)
     parser.add_argument("--dropout", type=float, default=0.1)
     parser.add_argument("--embed_sz", type=int, default=300)
@@ -44,9 +37,9 @@ def get_args(parser):
     parser.add_argument("--lr_patience", type=int, default=2)
     parser.add_argument("--max_epochs", type=int, default=100)
     parser.add_argument("--max_seq_len", type=int, default=512)
-    parser.add_argument("--model", type=str, default="concatbert", choices=["bow", "img", "bert", "concatbow", "concatbert", "mmbt"])
+    parser.add_argument("--model", type=str, default="img", choices=["bow", "img", "bert", "concatbow", "concatbert", "mmbt"])
     parser.add_argument("--n_workers", type=int, default=12)
-    parser.add_argument("--name", type=str, default="concat_bert_model")
+    parser.add_argument("--name", type=str, default="vilt_model")
     parser.add_argument("--num_image_embeds", type=int, default=1)
     parser.add_argument("--patience", type=int, default=10)
     parser.add_argument("--savedir", type=str, default="saved_models/")
@@ -106,7 +99,10 @@ def get_scheduler(optimizer, args):
 def model_eval(i_epoch, data, model, args, criterion, store_preds=False):
     with torch.no_grad():
         losses, preds, tgts = [], [], []
+        cnt = 0
         for batch in data:
+            print(cnt,len(data))
+            cnt += 1
             loss, out, tgt = model_forward(i_epoch, model, args, criterion, batch)
             losses.append(loss.item())
 
@@ -137,132 +133,117 @@ def model_eval(i_epoch, data, model, args, criterion, store_preds=False):
 
 
 def model_forward(i_epoch, model, args, criterion, batch):
-    txt, segment, mask, img, tgt = batch
+    # import ipdb
+    # ipdb.set_trace()
+    inputs, tgt = batch
 
     freeze_img = i_epoch < args.freeze_img
     freeze_txt = i_epoch < args.freeze_txt
 
-    if args.model == "bow":
-        txt = txt.cuda()
-        out = model(txt)
-    elif args.model == "img":
-        img = img.cuda()
-        out = model(img)
-    elif args.model == "concatbow":
-        txt, img = txt.cuda(), img.cuda()
-        out = model(txt, img)
-    elif args.model == "bert":
-        txt, mask, segment = txt.cuda(), mask.cuda(), segment.cuda()
-        out = model(txt, mask, segment)
-    elif args.model == "concatbert":
-        txt, img = txt.cuda(), img.cuda()
-        mask, segment = mask.cuda(), segment.cuda()
-        out = model(txt, mask, segment, img)
-    else:
-        assert args.model == "mmbt"
-        for param in model.enc.img_encoder.parameters():
-            param.requires_grad = not freeze_img
-        for param in model.enc.encoder.parameters():
-            param.requires_grad = not freeze_txt
+    for key in list(inputs.keys()):
+        
+        inputs[key] = inputs[key].squeeze().cuda()
+    tgt = tgt.squeeze()
+    out = model(inputs)
 
-        txt, img = txt.cuda(), img.cuda()
-        mask, segment = mask.cuda(), segment.cuda()
-        out = model(txt, mask, segment, img)
+
 
     tgt = tgt.cuda()
     loss = criterion(out, tgt)
     return loss, out, tgt
 
 
-def train(args):
+def test(args):
 
-    set_seed(args.seed)
-    args.savedir = os.path.join(args.savedir, args.name)
-    os.makedirs(args.savedir, exist_ok=True)
+    # set_seed(args.seed)
+    # args.savedir = os.path.join(args.savedir, args.name)
+    # os.makedirs(args.savedir, exist_ok=True)
 
     train_loader, val_loader, test_loaders = get_data_loaders(args)
 
     model = get_model(args)
     criterion = get_criterion(args)
-    optimizer = get_optimizer(model, args)
-    scheduler = get_scheduler(optimizer, args)
+    # optimizer = get_optimizer(model, args)
+    # scheduler = get_scheduler(optimizer, args)
 
     logger = create_logger("%s/logfile.log" % args.savedir, args)
     logger.info(model)
     model.cuda()
 
-    torch.save(args, os.path.join(args.savedir, "args.pt"))
+    # torch.save(args, os.path.join(args.savedir, "args.pt"))
 
-    start_epoch, global_step, n_no_improve, best_metric = 0, 0, 0, -np.inf
+    # start_epoch, global_step, n_no_improve, best_metric = 0, 0, 0, -np.inf
 
-    if os.path.exists(os.path.join(args.savedir, "checkpoint.pt")):
-        checkpoint = torch.load(os.path.join(args.savedir, "checkpoint.pt"))
-        start_epoch = checkpoint["epoch"]
-        n_no_improve = checkpoint["n_no_improve"]
-        best_metric = checkpoint["best_metric"]
-        model.load_state_dict(checkpoint["state_dict"])
-        optimizer.load_state_dict(checkpoint["optimizer"])
-        scheduler.load_state_dict(checkpoint["scheduler"])
+    # if os.path.exists(os.path.join(args.savedir, "checkpoint.pt")):
+    #     checkpoint = torch.load(os.path.join(args.savedir, "checkpoint.pt"))
+    #     start_epoch = checkpoint["epoch"]
+    #     n_no_improve = checkpoint["n_no_improve"]
+    #     best_metric = checkpoint["best_metric"]
+    #     model.load_state_dict(checkpoint["state_dict"])
+    #     optimizer.load_state_dict(checkpoint["optimizer"])
+    #     scheduler.load_state_dict(checkpoint["scheduler"])
 
-    logger.info("Training..")
-    for i_epoch in range(start_epoch, args.max_epochs):
-        train_losses = []
-        model.train()
-        optimizer.zero_grad()
+    # logger.info("Training..")
+    # for i_epoch in range(start_epoch, args.max_epochs):
+    #     train_losses = []
+    #     model.train()
+    #     optimizer.zero_grad()
 
-        for batch in tqdm(train_loader, total=len(train_loader)):
-            loss, _, _ = model_forward(i_epoch, model, args, criterion, batch)
-            if args.gradient_accumulation_steps > 1:
-                loss = loss / args.gradient_accumulation_steps
+    #     for batch in tqdm(train_loader, total=len(train_loader)):
+    #         loss, _, _ = model_forward(i_epoch, model, args, criterion, batch)
+    #         if args.gradient_accumulation_steps > 1:
+    #             loss = loss / args.gradient_accumulation_steps
 
-            train_losses.append(loss.item())
-            loss.backward()
-            global_step += 1
-            if global_step % args.gradient_accumulation_steps == 0:
-                optimizer.step()
-                optimizer.zero_grad()
+    #         train_losses.append(loss.item())
+    #         loss.backward()
+    #         global_step += 1
+    #         if global_step % args.gradient_accumulation_steps == 0:
+    #             optimizer.step()
+    #             optimizer.zero_grad()
 
-        model.eval()
-        metrics = model_eval(i_epoch, val_loader, model, args, criterion)
-        logger.info("Train Loss: {:.4f}".format(np.mean(train_losses)))
-        log_metrics("Val", metrics, args, logger)
+    #     model.eval()
+    #     metrics = model_eval(i_epoch, val_loader, model, args, criterion)
+    #     logger.info("Train Loss: {:.4f}".format(np.mean(train_losses)))
+    #     log_metrics("Val", metrics, args, logger)
 
-        tuning_metric = (
-            metrics["micro_f1"] if args.task_type == "multilabel" else metrics["acc"]
-        )
-        scheduler.step(tuning_metric)
-        is_improvement = tuning_metric > best_metric
-        if is_improvement:
-            best_metric = tuning_metric
-            n_no_improve = 0
-            save_checkpoint(
-            {
-                "epoch": i_epoch + 1,
-                "state_dict": model.state_dict(),
-                "optimizer": optimizer.state_dict(),
-                "scheduler": scheduler.state_dict(),
-                "n_no_improve": n_no_improve,
-                "best_metric": best_metric,
-            },
-            is_improvement,
-            args.savedir,
-        )
-        else:
-            n_no_improve += 1
+    #     tuning_metric = (
+    #         metrics["micro_f1"] if args.task_type == "multilabel" else metrics["acc"]
+    #     )
+    #     scheduler.step(tuning_metric)
+    #     is_improvement = tuning_metric > best_metric
+    #     if is_improvement:
+    #         best_metric = tuning_metric
+    #         n_no_improve = 0
+    #         save_checkpoint(
+    #         {
+    #             "epoch": i_epoch + 1,
+    #             "state_dict": model.state_dict(),
+    #             "optimizer": optimizer.state_dict(),
+    #             "scheduler": scheduler.state_dict(),
+    #             "n_no_improve": n_no_improve,
+    #             "best_metric": best_metric,
+    #         },
+    #         is_improvement,
+    #         args.savedir,
+    #     )
+    #     else:
+    #         n_no_improve += 1
 
 
 
-        if n_no_improve >= args.patience:
-            logger.info("No improvement. Breaking out of loop.")
-            break
+    #     if n_no_improve >= args.patience:
+    #         logger.info("No improvement. Breaking out of loop.")
+    #         break
 
+    args.savedir = os.path.join(args.savedir,args.name)
     load_checkpoint(model, os.path.join(args.savedir, "model_best.pt"))
     model.eval()
-    for test_name, test_loader in test_loaders.items():
-        test_metrics = model_eval(
-            np.inf, test_loader, model, args, criterion, store_preds=True
-        )
-        log_metrics(f"Test - {test_name}", test_metrics, args, logger)
+    # for test_name, test_loader in test_loaders.items():
+    test_metrics = model_eval(
+        np.inf, test_loaders, model, args, criterion, store_preds=True
+    )
+    log_metrics("Test", test_metrics, args, logger)
+    print(test_metrics)
 
 
 def cli_main():
@@ -270,7 +251,7 @@ def cli_main():
     get_args(parser)
     args, remaining_args = parser.parse_known_args()
     assert remaining_args == [], remaining_args
-    train(args)
+    test(args)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,821 @@
+INFO - 10/30/22 06:44:07 - 0:00:00 - batch_sz: 8
+                                     bert_model: bert-base-uncased
+                                     data_path: ../
+                                     drop_img_percent: 0.0
+                                     dropout: 0.1
+                                     embed_sz: 300
+                                     freeze_img: 0
+                                     freeze_txt: 0
+                                     glove_path: /path/to/glove_embeds/glove.840B.300d.txt
+                                     gradient_accumulation_steps: 8
+                                     hidden: []
+                                     hidden_sz: 768
+                                     img_embed_pool_type: avg
+                                     img_hidden_sz: 2048
+                                     include_bn: True
+                                     label_freqs: Counter({'cheesecake': 355, 'apple_pie': 344, 'waffles': 339, 'sushi': 337, 'churros': 335, 'falafel': 335, 'dumplings': 331, 'hamburger': 330, 'risotto': 330, 'french_toast': 329, 'deviled_eggs': 328, 'gnocchi': 327, 'gyoza': 326, 'chocolate_cake': 326, 'donuts': 326, 'macarons': 323, 'cup_cakes': 322, 'tiramisu': 322, 'ramen': 322, 'pancakes': 321, 'steak': 321, 'bread_pudding': 321, 'beet_salad': 319, 'prime_rib': 318, 'ice_cream': 318, 'beignets': 316, 'bruschetta': 315, 'macaroni_and_cheese': 315, 'cannoli': 315, 'beef_tartare': 315, 'hummus': 314, 'frozen_yogurt': 314, 'tacos': 314, 'chocolate_mousse': 313, 'ceviche': 313, 'beef_carpaccio': 312, 'grilled_salmon': 312, 'french_fries': 311, 'red_velvet_cake': 311, 'ravioli': 310, 'nachos': 308, 'hot_dog': 308, 'cheese_plate': 307, 'caprese_salad': 307, 'panna_cotta': 306, 'pizza': 306, 'shrimp_and_grits': 306, 'croque_madame': 306, 'lasagna': 306, 'miso_soup': 305, 'grilled_cheese_sandwich': 305, 'samosa': 305, 'oysters': 303, 'clam_chowder': 302, 'huevos_rancheros': 302, 'omelette': 302, 'guacamole': 298, 'poutine': 297, 'bibimbap': 296, 'carrot_cake': 295, 'club_sandwich': 295, 'foie_gras': 295, 'fried_calamari': 293, 'spring_rolls': 292, 'caesar_salad': 290, 'breakfast_burrito': 290, 'edamame': 289, 'pulled_pork_sandwich': 288, 'takoyaki': 288, 'escargots': 288, 'eggs_benedict': 287, 'onion_rings': 287, 'lobster_roll_sandwich': 286, 'sashimi': 283, 'mussels': 279, 'pad_thai': 279, 'spaghetti_carbonara': 278, 'pork_chop': 276, 'baby_back_ribs': 274, 'chicken_curry': 271, 'lobster_bisque': 271, 'tuna_tartare': 267, 'greek_salad': 265, 'baklava': 265, 'hot_and_sour_soup': 263, 'scallops': 262, 'chicken_quesadilla': 261, 'crab_cakes': 261, 'pho': 260, 'filet_mignon': 259, 'fried_rice': 258, 'strawberry_shortcake': 257, 'french_onion_soup': 254, 'garlic_bread': 254, 'paella': 253, 'fish_and_chips': 253, 'creme_brulee': 251, 'chicken_wings': 246, 'peking_duck': 244, 'seaweed_salad': 236, 'spaghetti_bolognese': 227})
+                                     labels: ['pulled_pork_sandwich', 'takoyaki', 'clam_chowder', 'chicken_curry', 'cheese_plate', 'beignets', 'fried_rice', 'beef_carpaccio', 'grilled_salmon', 'mussels', 'paella', 'deviled_eggs', 'macarons', 'eggs_benedict', 'panna_cotta', 'french_fries', 'beet_salad', 'gyoza', 'bruschetta', 'sashimi', 'sushi', 'cheesecake', 'spaghetti_bolognese', 'lobster_bisque', 'carrot_cake', 'bibimbap', 'escargots', 'filet_mignon', 'pho', 'cup_cakes', 'apple_pie', 'chicken_quesadilla', 'pad_thai', 'hamburger', 'nachos', 'caprese_salad', 'greek_salad', 'prime_rib', 'seaweed_salad', 'red_velvet_cake', 'tiramisu', 'ravioli', 'pork_chop', 'caesar_salad', 'scallops', 'french_toast', 'miso_soup', 'hot_dog', 'hummus', 'pizza', 'grilled_cheese_sandwich', 'macaroni_and_cheese', 'cannoli', 'breakfast_burrito', 'onion_rings', 'pancakes', 'strawberry_shortcake', 'tuna_tartare', 'chocolate_mousse', 'steak', 'chocolate_cake', 'donuts', 'baby_back_ribs', 'guacamole', 'shrimp_and_grits', 'gnocchi', 'poutine', 'churros', 'peking_duck', 'oysters', 'spaghetti_carbonara', 'risotto', 'fish_and_chips', 'chicken_wings', 'huevos_rancheros', 'spring_rolls', 'crab_cakes', 'frozen_yogurt', 'waffles', 'ceviche', 'croque_madame', 'tacos', 'ice_cream', 'dumplings', 'beef_tartare', 'baklava', 'ramen', 'fried_calamari', 'hot_and_sour_soup', 'falafel', 'edamame', 'club_sandwich', 'lasagna', 'french_onion_soup', 'lobster_roll_sandwich', 'creme_brulee', 'bread_pudding', 'samosa', 'garlic_bread', 'foie_gras', 'omelette']
+                                     lr: 0.0001
+                                     lr_factor: 0.5
+                                     lr_patience: 2
+                                     max_epochs: 100
+                                     max_seq_len: 512
+                                     model: concatbert
+                                     n_classes: 101
+                                     n_workers: 12
+                                     name: concat_bert_model
+                                     num_image_embeds: 1
+                                     patience: 10
+                                     savedir: models/concat_bert_model
+                                     seed: 123
+                                     task: food101
+                                     task_type: classification
+                                     train_data_len: 30050
+                                     vocab: <data.vocab.Vocab object at 0x7fdc3c2659d0>
+                                     vocab_sz: 30522
+                                     warmup: 0.1
+                                     weight_classes: 1
+INFO - 10/30/22 06:44:07 - 0:00:00 - MultimodalConcatBertClf(
+                                       (txtenc): BertEncoder(
+                                         (bert): BertModel(
+                                           (embeddings): BertEmbeddings(
+                                             (word_embeddings): Embedding(30522, 768, padding_idx=0)
+                                             (position_embeddings): Embedding(512, 768)
+                                             (token_type_embeddings): Embedding(2, 768)
+                                             (LayerNorm): BertLayerNorm()
+                                             (dropout): Dropout(p=0.1, inplace=False)
+                                           )
+                                           (encoder): BertEncoder(
+                                             (layer): ModuleList(
+                                               (0): BertLayer(
+                                                 (attention): BertAttention(
+                                                   (self): BertSelfAttention(
+                                                     (query): Linear(in_features=768, out_features=768, bias=True)
+                                                     (key): Linear(in_features=768, out_features=768, bias=True)
+                                                     (value): Linear(in_features=768, out_features=768, bias=True)
+                                                     (dropout): Dropout(p=0.1, inplace=False)
+                                                   )
+                                                   (output): BertSelfOutput(
+                                                     (dense): Linear(in_features=768, out_features=768, bias=True)
+                                                     (LayerNorm): BertLayerNorm()
+                                                     (dropout): Dropout(p=0.1, inplace=False)
+                                                   )
+                                                 )
+                                                 (intermediate): BertIntermediate(
+                                                   (dense): Linear(in_features=768, out_features=3072, bias=True)
+                                                 )
+                                                 (output): BertOutput(
+                                                   (dense): Linear(in_features=3072, out_features=768, bias=True)
+                                                   (LayerNorm): BertLayerNorm()
+                                                   (dropout): Dropout(p=0.1, inplace=False)
+                                                 )
+                                               )
+                                               (1): BertLayer(
+                                                 (attention): BertAttention(
+                                                   (self): BertSelfAttention(
+                                                     (query): Linear(in_features=768, out_features=768, bias=True)
+                                                     (key): Linear(in_features=768, out_features=768, bias=True)
+                                                     (value): Linear(in_features=768, out_features=768, bias=True)
+                                                     (dropout): Dropout(p=0.1, inplace=False)
+                                                   )
+                                                   (output): BertSelfOutput(
+                                                     (dense): Linear(in_features=768, out_features=768, bias=True)
+                                                     (LayerNorm): BertLayerNorm()
+                                                     (dropout): Dropout(p=0.1, inplace=False)
+                                                   )
+                                                 )
+                                                 (intermediate): BertIntermediate(
+                                                   (dense): Linear(in_features=768, out_features=3072, bias=True)
+                                                 )
+                                                 (output): BertOutput(
+                                                   (dense): Linear(in_features=3072, out_features=768, bias=True)
+                                                   (LayerNorm): BertLayerNorm()
+                                                   (dropout): Dropout(p=0.1, inplace=False)
+                                                 )
+                                               )
+                                               (2): BertLayer(
+                                                 (attention): BertAttention(
+                                                   (self): BertSelfAttention(
+                                                     (query): Linear(in_features=768, out_features=768, bias=True)
+                                                     (key): Linear(in_features=768, out_features=768, bias=True)
+                                                     (value): Linear(in_features=768, out_features=768, bias=True)
+                                                     (dropout): Dropout(p=0.1, inplace=False)
+                                                   )
+                                                   (output): BertSelfOutput(
+                                                     (dense): Linear(in_features=768, out_features=768, bias=True)
+                                                     (LayerNorm): BertLayerNorm()
+                                                     (dropout): Dropout(p=0.1, inplace=False)
+                                                   )
+                                                 )
+                                                 (intermediate): BertIntermediate(
+                                                   (dense): Linear(in_features=768, out_features=3072, bias=True)
+                                                 )
+                                                 (output): BertOutput(
+                                                   (dense): Linear(in_features=3072, out_features=768, bias=True)
+                                                   (LayerNorm): BertLayerNorm()
+                                                   (dropout): Dropout(p=0.1, inplace=False)
+                                                 )
+                                               )
+                                               (3): BertLayer(
+                                                 (attention): BertAttention(
+                                                   (self): BertSelfAttention(
+                                                     (query): Linear(in_features=768, out_features=768, bias=True)
+                                                     (key): Linear(in_features=768, out_features=768, bias=True)
+                                                     (value): Linear(in_features=768, out_features=768, bias=True)
+                                                     (dropout): Dropout(p=0.1, inplace=False)
+                                                   )
+                                                   (output): BertSelfOutput(
+                                                     (dense): Linear(in_features=768, out_features=768, bias=True)
+                                                     (LayerNorm): BertLayerNorm()
+                                                     (dropout): Dropout(p=0.1, inplace=False)
+                                                   )
+                                                 )
+                                                 (intermediate): BertIntermediate(
+                                                   (dense): Linear(in_features=768, out_features=3072, bias=True)
+                                                 )
+                                                 (output): BertOutput(
+                                                   (dense): Linear(in_features=3072, out_features=768, bias=True)
+                                                   (LayerNorm): BertLayerNorm()
+                                                   (dropout): Dropout(p=0.1, inplace=False)
+                                                 )
+                                               )
+                                               (4): BertLayer(
+                                                 (attention): BertAttention(
+                                                   (self): BertSelfAttention(
+                                                     (query): Linear(in_features=768, out_features=768, bias=True)
+                                                     (key): Linear(in_features=768, out_features=768, bias=True)
+                                                     (value): Linear(in_features=768, out_features=768, bias=True)
+                                                     (dropout): Dropout(p=0.1, inplace=False)
+                                                   )
+                                                   (output): BertSelfOutput(
+                                                     (dense): Linear(in_features=768, out_features=768, bias=True)
+                                                     (LayerNorm): BertLayerNorm()
+                                                     (dropout): Dropout(p=0.1, inplace=False)
+                                                   )
+                                                 )
+                                                 (intermediate): BertIntermediate(
+                                                   (dense): Linear(in_features=768, out_features=3072, bias=True)
+                                                 )
+                                                 (output): BertOutput(
+                                                   (dense): Linear(in_features=3072, out_features=768, bias=True)
+                                                   (LayerNorm): BertLayerNorm()
+                                                   (dropout): Dropout(p=0.1, inplace=False)
+                                                 )
+                                               )
+                                               (5): BertLayer(
+                                                 (attention): BertAttention(
+                                                   (self): BertSelfAttention(
+                                                     (query): Linear(in_features=768, out_features=768, bias=True)
+                                                     (key): Linear(in_features=768, out_features=768, bias=True)
+                                                     (value): Linear(in_features=768, out_features=768, bias=True)
+                                                     (dropout): Dropout(p=0.1, inplace=False)
+                                                   )
+                                                   (output): BertSelfOutput(
+                                                     (dense): Linear(in_features=768, out_features=768, bias=True)
+                                                     (LayerNorm): BertLayerNorm()
+                                                     (dropout): Dropout(p=0.1, inplace=False)
+                                                   )
+                                                 )
+                                                 (intermediate): BertIntermediate(
+                                                   (dense): Linear(in_features=768, out_features=3072, bias=True)
+                                                 )
+                                                 (output): BertOutput(
+                                                   (dense): Linear(in_features=3072, out_features=768, bias=True)
+                                                   (LayerNorm): BertLayerNorm()
+                                                   (dropout): Dropout(p=0.1, inplace=False)
+                                                 )
+                                               )
+                                               (6): BertLayer(
+                                                 (attention): BertAttention(
+                                                   (self): BertSelfAttention(
+                                                     (query): Linear(in_features=768, out_features=768, bias=True)
+                                                     (key): Linear(in_features=768, out_features=768, bias=True)
+                                                     (value): Linear(in_features=768, out_features=768, bias=True)
+                                                     (dropout): Dropout(p=0.1, inplace=False)
+                                                   )
+                                                   (output): BertSelfOutput(
+                                                     (dense): Linear(in_features=768, out_features=768, bias=True)
+                                                     (LayerNorm): BertLayerNorm()
+                                                     (dropout): Dropout(p=0.1, inplace=False)
+                                                   )
+                                                 )
+                                                 (intermediate): BertIntermediate(
+                                                   (dense): Linear(in_features=768, out_features=3072, bias=True)
+                                                 )
+                                                 (output): BertOutput(
+                                                   (dense): Linear(in_features=3072, out_features=768, bias=True)
+                                                   (LayerNorm): BertLayerNorm()
+                                                   (dropout): Dropout(p=0.1, inplace=False)
+                                                 )
+                                               )
+                                               (7): BertLayer(
+                                                 (attention): BertAttention(
+                                                   (self): BertSelfAttention(
+                                                     (query): Linear(in_features=768, out_features=768, bias=True)
+                                                     (key): Linear(in_features=768, out_features=768, bias=True)
+                                                     (value): Linear(in_features=768, out_features=768, bias=True)
+                                                     (dropout): Dropout(p=0.1, inplace=False)
+                                                   )
+                                                   (output): BertSelfOutput(
+                                                     (dense): Linear(in_features=768, out_features=768, bias=True)
+                                                     (LayerNorm): BertLayerNorm()
+                                                     (dropout): Dropout(p=0.1, inplace=False)
+                                                   )
+                                                 )
+                                                 (intermediate): BertIntermediate(
+                                                   (dense): Linear(in_features=768, out_features=3072, bias=True)
+                                                 )
+                                                 (output): BertOutput(
+                                                   (dense): Linear(in_features=3072, out_features=768, bias=True)
+                                                   (LayerNorm): BertLayerNorm()
+                                                   (dropout): Dropout(p=0.1, inplace=False)
+                                                 )
+                                               )
+                                               (8): BertLayer(
+                                                 (attention): BertAttention(
+                                                   (self): BertSelfAttention(
+                                                     (query): Linear(in_features=768, out_features=768, bias=True)
+                                                     (key): Linear(in_features=768, out_features=768, bias=True)
+                                                     (value): Linear(in_features=768, out_features=768, bias=True)
+                                                     (dropout): Dropout(p=0.1, inplace=False)
+                                                   )
+                                                   (output): BertSelfOutput(
+                                                     (dense): Linear(in_features=768, out_features=768, bias=True)
+                                                     (LayerNorm): BertLayerNorm()
+                                                     (dropout): Dropout(p=0.1, inplace=False)
+                                                   )
+                                                 )
+                                                 (intermediate): BertIntermediate(
+                                                   (dense): Linear(in_features=768, out_features=3072, bias=True)
+                                                 )
+                                                 (output): BertOutput(
+                                                   (dense): Linear(in_features=3072, out_features=768, bias=True)
+                                                   (LayerNorm): BertLayerNorm()
+                                                   (dropout): Dropout(p=0.1, inplace=False)
+                                                 )
+                                               )
+                                               (9): BertLayer(
+                                                 (attention): BertAttention(
+                                                   (self): BertSelfAttention(
+                                                     (query): Linear(in_features=768, out_features=768, bias=True)
+                                                     (key): Linear(in_features=768, out_features=768, bias=True)
+                                                     (value): Linear(in_features=768, out_features=768, bias=True)
+                                                     (dropout): Dropout(p=0.1, inplace=False)
+                                                   )
+                                                   (output): BertSelfOutput(
+                                                     (dense): Linear(in_features=768, out_features=768, bias=True)
+                                                     (LayerNorm): BertLayerNorm()
+                                                     (dropout): Dropout(p=0.1, inplace=False)
+                                                   )
+                                                 )
+                                                 (intermediate): BertIntermediate(
+                                                   (dense): Linear(in_features=768, out_features=3072, bias=True)
+                                                 )
+                                                 (output): BertOutput(
+                                                   (dense): Linear(in_features=3072, out_features=768, bias=True)
+                                                   (LayerNorm): BertLayerNorm()
+                                                   (dropout): Dropout(p=0.1, inplace=False)
+                                                 )
+                                               )
+                                               (10): BertLayer(
+                                                 (attention): BertAttention(
+                                                   (self): BertSelfAttention(
+                                                     (query): Linear(in_features=768, out_features=768, bias=True)
+                                                     (key): Linear(in_features=768, out_features=768, bias=True)
+                                                     (value): Linear(in_features=768, out_features=768, bias=True)
+                                                     (dropout): Dropout(p=0.1, inplace=False)
+                                                   )
+                                                   (output): BertSelfOutput(
+                                                     (dense): Linear(in_features=768, out_features=768, bias=True)
+                                                     (LayerNorm): BertLayerNorm()
+                                                     (dropout): Dropout(p=0.1, inplace=False)
+                                                   )
+                                                 )
+                                                 (intermediate): BertIntermediate(
+                                                   (dense): Linear(in_features=768, out_features=3072, bias=True)
+                                                 )
+                                                 (output): BertOutput(
+                                                   (dense): Linear(in_features=3072, out_features=768, bias=True)
+                                                   (LayerNorm): BertLayerNorm()
+                                                   (dropout): Dropout(p=0.1, inplace=False)
+                                                 )
+                                               )
+                                               (11): BertLayer(
+                                                 (attention): BertAttention(
+                                                   (self): BertSelfAttention(
+                                                     (query): Linear(in_features=768, out_features=768, bias=True)
+                                                     (key): Linear(in_features=768, out_features=768, bias=True)
+                                                     (value): Linear(in_features=768, out_features=768, bias=True)
+                                                     (dropout): Dropout(p=0.1, inplace=False)
+                                                   )
+                                                   (output): BertSelfOutput(
+                                                     (dense): Linear(in_features=768, out_features=768, bias=True)
+                                                     (LayerNorm): BertLayerNorm()
+                                                     (dropout): Dropout(p=0.1, inplace=False)
+                                                   )
+                                                 )
+                                                 (intermediate): BertIntermediate(
+                                                   (dense): Linear(in_features=768, out_features=3072, bias=True)
+                                                 )
+                                                 (output): BertOutput(
+                                                   (dense): Linear(in_features=3072, out_features=768, bias=True)
+                                                   (LayerNorm): BertLayerNorm()
+                                                   (dropout): Dropout(p=0.1, inplace=False)
+                                                 )
+                                               )
+                                             )
+                                           )
+                                           (pooler): BertPooler(
+                                             (dense): Linear(in_features=768, out_features=768, bias=True)
+                                             (activation): Tanh()
+                                           )
+                                         )
+                                       )
+                                       (imgenc): ImageEncoder(
+                                         (model): Sequential(
+                                           (0): Conv2d(3, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
+                                           (1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                           (2): ReLU(inplace=True)
+                                           (3): MaxPool2d(kernel_size=3, stride=2, padding=1, dilation=1, ceil_mode=False)
+                                           (4): Sequential(
+                                             (0): Bottleneck(
+                                               (conv1): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                                               (bn2): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv3): Conv2d(64, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn3): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (relu): ReLU(inplace=True)
+                                               (downsample): Sequential(
+                                                 (0): Conv2d(64, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                                 (1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               )
+                                             )
+                                             (1): Bottleneck(
+                                               (conv1): Conv2d(256, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                                               (bn2): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv3): Conv2d(64, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn3): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (relu): ReLU(inplace=True)
+                                             )
+                                             (2): Bottleneck(
+                                               (conv1): Conv2d(256, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                                               (bn2): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv3): Conv2d(64, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn3): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (relu): ReLU(inplace=True)
+                                             )
+                                           )
+                                           (5): Sequential(
+                                             (0): Bottleneck(
+                                               (conv1): Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv2): Conv2d(128, 128, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+                                               (bn2): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv3): Conv2d(128, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn3): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (relu): ReLU(inplace=True)
+                                               (downsample): Sequential(
+                                                 (0): Conv2d(256, 512, kernel_size=(1, 1), stride=(2, 2), bias=False)
+                                                 (1): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               )
+                                             )
+                                             (1): Bottleneck(
+                                               (conv1): Conv2d(512, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv2): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                                               (bn2): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv3): Conv2d(128, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn3): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (relu): ReLU(inplace=True)
+                                             )
+                                             (2): Bottleneck(
+                                               (conv1): Conv2d(512, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv2): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                                               (bn2): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv3): Conv2d(128, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn3): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (relu): ReLU(inplace=True)
+                                             )
+                                             (3): Bottleneck(
+                                               (conv1): Conv2d(512, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv2): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                                               (bn2): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv3): Conv2d(128, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn3): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (relu): ReLU(inplace=True)
+                                             )
+                                             (4): Bottleneck(
+                                               (conv1): Conv2d(512, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv2): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                                               (bn2): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv3): Conv2d(128, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn3): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (relu): ReLU(inplace=True)
+                                             )
+                                             (5): Bottleneck(
+                                               (conv1): Conv2d(512, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv2): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                                               (bn2): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv3): Conv2d(128, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn3): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (relu): ReLU(inplace=True)
+                                             )
+                                             (6): Bottleneck(
+                                               (conv1): Conv2d(512, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv2): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                                               (bn2): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv3): Conv2d(128, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn3): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (relu): ReLU(inplace=True)
+                                             )
+                                             (7): Bottleneck(
+                                               (conv1): Conv2d(512, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv2): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                                               (bn2): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv3): Conv2d(128, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn3): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (relu): ReLU(inplace=True)
+                                             )
+                                           )
+                                           (6): Sequential(
+                                             (0): Bottleneck(
+                                               (conv1): Conv2d(512, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+                                               (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (relu): ReLU(inplace=True)
+                                               (downsample): Sequential(
+                                                 (0): Conv2d(512, 1024, kernel_size=(1, 1), stride=(2, 2), bias=False)
+                                                 (1): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               )
+                                             )
+                                             (1): Bottleneck(
+                                               (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                                               (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (relu): ReLU(inplace=True)
+                                             )
+                                             (2): Bottleneck(
+                                               (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                                               (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (relu): ReLU(inplace=True)
+                                             )
+                                             (3): Bottleneck(
+                                               (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                                               (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (relu): ReLU(inplace=True)
+                                             )
+                                             (4): Bottleneck(
+                                               (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                                               (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (relu): ReLU(inplace=True)
+                                             )
+                                             (5): Bottleneck(
+                                               (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                                               (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (relu): ReLU(inplace=True)
+                                             )
+                                             (6): Bottleneck(
+                                               (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                                               (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (relu): ReLU(inplace=True)
+                                             )
+                                             (7): Bottleneck(
+                                               (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                                               (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (relu): ReLU(inplace=True)
+                                             )
+                                             (8): Bottleneck(
+                                               (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                                               (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (relu): ReLU(inplace=True)
+                                             )
+                                             (9): Bottleneck(
+                                               (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                                               (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (relu): ReLU(inplace=True)
+                                             )
+                                             (10): Bottleneck(
+                                               (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                                               (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (relu): ReLU(inplace=True)
+                                             )
+                                             (11): Bottleneck(
+                                               (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                                               (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (relu): ReLU(inplace=True)
+                                             )
+                                             (12): Bottleneck(
+                                               (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                                               (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (relu): ReLU(inplace=True)
+                                             )
+                                             (13): Bottleneck(
+                                               (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                                               (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (relu): ReLU(inplace=True)
+                                             )
+                                             (14): Bottleneck(
+                                               (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                                               (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (relu): ReLU(inplace=True)
+                                             )
+                                             (15): Bottleneck(
+                                               (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                                               (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (relu): ReLU(inplace=True)
+                                             )
+                                             (16): Bottleneck(
+                                               (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                                               (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (relu): ReLU(inplace=True)
+                                             )
+                                             (17): Bottleneck(
+                                               (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                                               (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (relu): ReLU(inplace=True)
+                                             )
+                                             (18): Bottleneck(
+                                               (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                                               (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (relu): ReLU(inplace=True)
+                                             )
+                                             (19): Bottleneck(
+                                               (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                                               (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (relu): ReLU(inplace=True)
+                                             )
+                                             (20): Bottleneck(
+                                               (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                                               (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (relu): ReLU(inplace=True)
+                                             )
+                                             (21): Bottleneck(
+                                               (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                                               (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (relu): ReLU(inplace=True)
+                                             )
+                                             (22): Bottleneck(
+                                               (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                                               (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (relu): ReLU(inplace=True)
+                                             )
+                                             (23): Bottleneck(
+                                               (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                                               (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (relu): ReLU(inplace=True)
+                                             )
+                                             (24): Bottleneck(
+                                               (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                                               (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (relu): ReLU(inplace=True)
+                                             )
+                                             (25): Bottleneck(
+                                               (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                                               (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (relu): ReLU(inplace=True)
+                                             )
+                                             (26): Bottleneck(
+                                               (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                                               (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (relu): ReLU(inplace=True)
+                                             )
+                                             (27): Bottleneck(
+                                               (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                                               (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (relu): ReLU(inplace=True)
+                                             )
+                                             (28): Bottleneck(
+                                               (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                                               (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (relu): ReLU(inplace=True)
+                                             )
+                                             (29): Bottleneck(
+                                               (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                                               (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (relu): ReLU(inplace=True)
+                                             )
+                                             (30): Bottleneck(
+                                               (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                                               (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (relu): ReLU(inplace=True)
+                                             )
+                                             (31): Bottleneck(
+                                               (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                                               (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (relu): ReLU(inplace=True)
+                                             )
+                                             (32): Bottleneck(
+                                               (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                                               (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (relu): ReLU(inplace=True)
+                                             )
+                                             (33): Bottleneck(
+                                               (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                                               (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (relu): ReLU(inplace=True)
+                                             )
+                                             (34): Bottleneck(
+                                               (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                                               (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (relu): ReLU(inplace=True)
+                                             )
+                                             (35): Bottleneck(
+                                               (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                                               (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (relu): ReLU(inplace=True)
+                                             )
+                                           )
+                                           (7): Sequential(
+                                             (0): Bottleneck(
+                                               (conv1): Conv2d(1024, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn1): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv2): Conv2d(512, 512, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+                                               (bn2): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv3): Conv2d(512, 2048, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn3): BatchNorm2d(2048, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (relu): ReLU(inplace=True)
+                                               (downsample): Sequential(
+                                                 (0): Conv2d(1024, 2048, kernel_size=(1, 1), stride=(2, 2), bias=False)
+                                                 (1): BatchNorm2d(2048, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               )
+                                             )
+                                             (1): Bottleneck(
+                                               (conv1): Conv2d(2048, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn1): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv2): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                                               (bn2): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv3): Conv2d(512, 2048, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn3): BatchNorm2d(2048, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (relu): ReLU(inplace=True)
+                                             )
+                                             (2): Bottleneck(
+                                               (conv1): Conv2d(2048, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn1): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv2): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+                                               (bn2): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (conv3): Conv2d(512, 2048, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                                               (bn3): BatchNorm2d(2048, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                                               (relu): ReLU(inplace=True)
+                                             )
+                                           )
+                                         )
+                                         (pool): AdaptiveAvgPool2d(output_size=(1, 1))
+                                       )
+                                       (clf): ModuleList(
+                                         (0): Linear(in_features=2816, out_features=101, bias=True)
+                                       )
+                                     )
+INFO - 10/30/22 06:44:09 - 0:00:03 - Training..

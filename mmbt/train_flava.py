@@ -17,7 +17,7 @@ import torch.nn as nn
 import torch.optim as optim
 from pytorch_pretrained_bert import BertAdam
 
-from data.helpers import get_data_loaders
+from data.helpers import get_data_loaders_flava as get_data_loaders
 from models import get_model
 from utils.logger import create_logger
 from utils.utils import *
@@ -26,7 +26,7 @@ from utils.utils import *
 def get_args(parser):
     parser.add_argument("--batch_sz", type=int, default=8)
     parser.add_argument("--bert_model", type=str, default="bert-base-uncased", choices=["bert-base-uncased", "bert-large-uncased"])
-    parser.add_argument("--data_path", type=str, default="../")
+    parser.add_argument("--data_path", type=str, default="../../")
     parser.add_argument("--drop_img_percent", type=float, default=0.0)
     parser.add_argument("--dropout", type=float, default=0.1)
     parser.add_argument("--embed_sz", type=int, default=300)
@@ -44,9 +44,9 @@ def get_args(parser):
     parser.add_argument("--lr_patience", type=int, default=2)
     parser.add_argument("--max_epochs", type=int, default=100)
     parser.add_argument("--max_seq_len", type=int, default=512)
-    parser.add_argument("--model", type=str, default="concatbert", choices=["bow", "img", "bert", "concatbow", "concatbert", "mmbt"])
+    parser.add_argument("--model", type=str, default="flava", choices=["bow", "img", "bert", "concatbow", "concatbert", "mmbt","vilt","flava"])
     parser.add_argument("--n_workers", type=int, default=12)
-    parser.add_argument("--name", type=str, default="concat_bert_model")
+    parser.add_argument("--name", type=str, default="flava_model_2")
     parser.add_argument("--num_image_embeds", type=int, default=1)
     parser.add_argument("--patience", type=int, default=10)
     parser.add_argument("--savedir", type=str, default="saved_models/")
@@ -137,37 +137,20 @@ def model_eval(i_epoch, data, model, args, criterion, store_preds=False):
 
 
 def model_forward(i_epoch, model, args, criterion, batch):
-    txt, segment, mask, img, tgt = batch
+    # import ipdb
+    # ipdb.set_trace()
+    inputs, tgt = batch
 
     freeze_img = i_epoch < args.freeze_img
     freeze_txt = i_epoch < args.freeze_txt
 
-    if args.model == "bow":
-        txt = txt.cuda()
-        out = model(txt)
-    elif args.model == "img":
-        img = img.cuda()
-        out = model(img)
-    elif args.model == "concatbow":
-        txt, img = txt.cuda(), img.cuda()
-        out = model(txt, img)
-    elif args.model == "bert":
-        txt, mask, segment = txt.cuda(), mask.cuda(), segment.cuda()
-        out = model(txt, mask, segment)
-    elif args.model == "concatbert":
-        txt, img = txt.cuda(), img.cuda()
-        mask, segment = mask.cuda(), segment.cuda()
-        out = model(txt, mask, segment, img)
-    else:
-        assert args.model == "mmbt"
-        for param in model.enc.img_encoder.parameters():
-            param.requires_grad = not freeze_img
-        for param in model.enc.encoder.parameters():
-            param.requires_grad = not freeze_txt
+    for key in list(inputs.keys()):
+        
+        inputs[key] = inputs[key].squeeze().cuda()
+    tgt = tgt.squeeze()
+    out = model(inputs)
 
-        txt, img = txt.cuda(), img.cuda()
-        mask, segment = mask.cuda(), segment.cuda()
-        out = model(txt, mask, segment, img)
+
 
     tgt = tgt.cuda()
     loss = criterion(out, tgt)

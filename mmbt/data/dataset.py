@@ -15,29 +15,48 @@ from PIL import Image
 import torch
 from torch.utils.data import Dataset
 
-from mmbt.utils.utils import truncate_seq_pair, numpy_seed
-
+from utils.utils import truncate_seq_pair, numpy_seed
+import augly.image as imaugs
+from transformers import ViltProcessor
 
 class JsonlDataset(Dataset):
     def __init__(self, data_path, tokenizer, transforms, vocab, args):
-        self.data = [json.loads(l) for l in open(data_path)]
-        self.data_dir = os.path.dirname(data_path)
-        self.tokenizer = tokenizer
-        self.args = args
-        self.vocab = vocab
-        self.n_classes = len(args.labels)
-        self.text_start_token = ["[CLS]"] if args.model != "mmbt" else ["[SEP]"]
+      path = data_path.split('.jsonl')[0]+'_filtered'+'.jsonl'
+      data_path = '.'.join([data_path.split('.jsonl')[0]+'_filtered','jsonl'])
+      self.data = [json.loads(l) for l in open(data_path)][:500]
+      
+      if 'test' in data_path:
+          data_path = '../food101/test_filtered_del.jsonl'
+          self.data = [json.loads(l) for l in open(data_path)][:500]
 
-        with numpy_seed(0):
-            for row in self.data:
-                if np.random.random() < args.drop_img_percent:
-                    row["img"] = None
+      print(len(self.data))
+      self.data_dir = os.path.dirname(data_path)
+      self.tokenizer = tokenizer
+      self.args = args
+      self.vocab = vocab
+      self.n_classes = len(args.labels)
+      self.text_start_token = ["[CLS]"] if args.model != "mmbt" else ["[SEP]"]
 
-        self.max_seq_len = args.max_seq_len
-        if args.model == "mmbt":
-            self.max_seq_len -= args.num_image_embeds
+      with numpy_seed(0):
+          for row in self.data:
+              if np.random.random() < args.drop_img_percent:
+                  row["img"] = None
 
-        self.transforms = transforms
+      self.max_seq_len = args.max_seq_len
+      if args.model == "mmbt":
+          self.max_seq_len -= args.num_image_embeds
+
+      self.transforms = transforms
+      COLOR_JITTER_PARAMS = {
+          "brightness_factor": 1.2,
+          "contrast_factor": 1.2,
+          "saturation_factor": 1.4,
+      }
+      params = {"level":0.7}
+
+
+      # self.AUGMENTATIONS = imaugs.ColorJitter(**COLOR_JITTER_PARAMS)
+      self.AUGMENTATIONS = imaugs.Opacity(**params)
 
     def __len__(self):
         return len(self.data)
@@ -80,9 +99,11 @@ class JsonlDataset(Dataset):
         image = None
         if self.args.model in ["img", "concatbow", "concatbert", "mmbt"]:
             if self.data[index]["img"]:
+                new_path = 'image_filtered/' + ('/').join(self.data[index]["img"].split('/')[1:])
                 image = Image.open(
-                    os.path.join(self.data_dir, self.data[index]["img"])
+                    os.path.join(self.data_dir, new_path)
                 ).convert("RGB")
+                image = self.AUGMENTATIONS(image)
             else:
                 image = Image.fromarray(128 * np.ones((256, 256, 3), dtype=np.uint8))
             image = self.transforms(image)
