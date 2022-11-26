@@ -180,12 +180,12 @@ attack_args = AttackArgs(num_examples=50,
                         checkpoint_interval=100, 
                         checkpoint_dir=args.savedir, 
                         disable_stdout=True,
-                        query_budget = 100,parallel=False)
+                        query_budget = 500,parallel=False)
 
 attacker = Attacker(attack, my_dataset, attack_args)
 
 #set batch size of goal function
-attacker.attack.goal_function.batch_size = 8
+attacker.attack.goal_function.batch_size = 2
 #set max words pertubed constraint
 max_percent_words = 0.3
 #flag = 0

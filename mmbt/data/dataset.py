@@ -190,7 +190,7 @@ class text_attackDataset(Dataset):
         )
 
         sentence2 = (' ').join(self.tokenizer(self.data[index]["text"])[: (self.args.max_seq_len - 1)])
-        sentence2 = (' ').join(self.tokenizer(self.data[index]["text"])[: 5])
+        # sentence2 = (' ').join(self.tokenizer(self.data[index]["text"])[: 256])
 
         # sentence2 = 
         # print(sentence2)
@@ -210,7 +210,7 @@ class text_attackDataset(Dataset):
         image = None
         if self.args.model in ["img", "concatbow", "concatbert", "mmbt"]:
             if self.data[index]["img"]:
-                new_path = 'image_filtered/' + ('/').join(self.data[index]["img"].split('/')[1:])
+                new_path = 'images/' + ('/').join(self.data[index]["img"].split('/')[1:])
                 # print(new_path)
                 image = Image.open(
                     os.path.join(self.data_dir, new_path)

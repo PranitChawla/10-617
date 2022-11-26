@@ -40,9 +40,8 @@ class MultimodalConcatBertClf(nn.Module):
     def __init__(self, args):
         super(MultimodalConcatBertClf, self).__init__()
         self.args = args
-        self.model = BertEncoder(args)
-        # self.txtenc = BertEncoder(args)
-        # self.model = self.txtenc
+        self.txtenc = BertEncoder(args)
+        self.model = self.txtenc
         self.imgenc = ImageEncoder(args)
         self.tokenizer = BertTokenizer.from_pretrained(args.bert_model, do_lower_case=True).tokenize
         last_size = args.hidden_sz + (args.img_hidden_sz * args.num_image_embeds)
@@ -59,7 +58,7 @@ class MultimodalConcatBertClf(nn.Module):
         self.vocab = get_vocab(args)
         self.text_start_token = ["[CLS]"] if args.model != "mmbt" else ["[SEP]"]
         self.transforms = get_transforms(args)
-        self.data_dir = "/Users/pranitchawla/Desktop/mmbt/food101"
+        self.data_dir = "../food101"
 
     def custom_collate_fn(self,batch):
         lens = [row.shape[0] for row in batch]
@@ -104,7 +103,6 @@ class MultimodalConcatBertClf(nn.Module):
     
     def forward(self, txt, mask = None, segment = None, img = None):
         import ipdb
-        print(txt)
         # ipdb.set_trace()
         if type(txt) != type(torch.ones(1)):
             txt_list = []
