@@ -19,7 +19,7 @@ from torch.utils.data import DataLoader
 
 from data.dataset_vilt import JsonlDataset as JsonlDataset_vilt
 from data.dataset_flava import JsonlDataset as JsonlDataset_flava
-
+from data.dataset import JsonlDataset
 from data.vocab import Vocab
 from transformers import DataCollatorWithPadding, ViltProcessor
 
@@ -27,13 +27,13 @@ from transformers import DataCollatorWithPadding, ViltProcessor
 def get_transforms(args):
     return transforms.Compose(
         [
-            transforms.Resize(256)
-            # transforms.CenterCrop(224),
-            # transforms.ToTensor(),
-            # transforms.Normalize(
-            #     mean=[0.46777044, 0.44531429, 0.40661017],
-            #     std=[0.12221994, 0.12145835, 0.14380469],
-            # ),
+            transforms.Resize(256),
+            transforms.CenterCrop(224),
+            transforms.ToTensor(),
+            transforms.Normalize(
+                mean=[0.46777044, 0.44531429, 0.40661017],
+                std=[0.12221994, 0.12145835, 0.14380469],
+            ),
         ]
     )
 
@@ -61,17 +61,18 @@ def get_glove_words(path):
 
 def get_vocab(args):
     vocab = Vocab()
-    # if args.model in ["bert", "mmbt", "concatbert"]:
-    #     bert_tokenizer = BertTokenizer.from_pretrained(
-    #         args.bert_model, do_lower_case=True
-    #     )
-    #     vocab.stoi = bert_tokenizer.vocab
-    #     vocab.itos = bert_tokenizer.ids_to_tokens
-    #     vocab.vocab_sz = len(vocab.itos)
+    if args.model in ["bert", "mmbt", "concatbert"]:
+        bert_tokenizer = BertTokenizer.from_pretrained(
+            args.bert_model, do_lower_case=True
+        )
+        vocab.stoi = bert_tokenizer.vocab
+        vocab.itos = bert_tokenizer.ids_to_tokens
+        vocab.vocab_sz = len(vocab.itos)
 
-    # else:
-    #     word_list = get_glove_words(args.glove_path)
-    #     vocab.add(word_list)
+    else:
+        # word_list = get_glove_words(args.glove_path)
+        word_list = []
+        vocab.add(word_list)
 
     return vocab
 

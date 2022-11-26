@@ -16,7 +16,7 @@ import torch
 from torch.utils.data import Dataset
 
 from utils.utils import truncate_seq_pair, numpy_seed
-import augly.image as imaugs
+# import augly.image as imaugs
 from transformers import ViltProcessor
 import torchvision.transforms as transforms
 from transformers import FlavaProcessor, FlavaModel

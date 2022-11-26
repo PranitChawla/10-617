@@ -22,9 +22,9 @@ from models import get_model
 from utils.logger import create_logger
 from utils.utils import *
 
-
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
 def get_args(parser):
-    parser.add_argument("--batch_sz", type=int, default=256)
+    parser.add_argument("--batch_sz", type=int, default=2)
     parser.add_argument("--bert_model", type=str, default="bert-base-uncased", choices=["bert-base-uncased", "bert-large-uncased"])
     parser.add_argument("--data_path", type=str, default="../")
     parser.add_argument("--drop_img_percent", type=float, default=0.0)
@@ -108,7 +108,8 @@ def model_eval(i_epoch, data, model, args, criterion, store_preds=False):
         losses, preds, tgts = [], [], []
         cnt = 0
         for batch in data:
-            print(cnt,len(data))
+            if cnt%100==0:
+                print(cnt,len(data))
             cnt += 1
             loss, out, tgt = model_forward(i_epoch, model, args, criterion, batch)
             losses.append(loss.item())
@@ -141,25 +142,30 @@ def model_eval(i_epoch, data, model, args, criterion, store_preds=False):
 
 def model_forward(i_epoch, model, args, criterion, batch):
     txt, segment, mask, img, tgt = batch
-
+    print(segment)
     freeze_img = i_epoch < args.freeze_img
     freeze_txt = i_epoch < args.freeze_txt
 
     if args.model == "bow":
-        txt = txt.cuda()
+        # txt = txt.cuda()
+        txt = txt.to(device)
         out = model(txt)
     elif args.model == "img":
-        img = img.cuda()
+        # img = img.cuda()
+        img = img.to(device)
         out = model(img)
     elif args.model == "concatbow":
-        txt, img = txt.cuda(), img.cuda()
+        # txt, img = txt.cuda(), img.cuda()
+        txt, img = txt.to(device), img.to(device)
         out = model(txt, img)
     elif args.model == "bert":
-        txt, mask, segment = txt.cuda(), mask.cuda(), segment.cuda()
+        # txt, mask, segment = txt.cuda(), mask.cuda(), segment.cuda()
+        txt, mask, segment = txt.to(device), mask.to(device), segment.to(device)
         out = model(txt, mask, segment)
     elif args.model == "concatbert":
-        txt, img = txt.cuda(), img.cuda()
-        mask, segment = mask.cuda(), segment.cuda()
+        # txt, img = txt.cuda(), img.cuda()
+        # mask, segment = mask.cuda(), segment.cuda()
+        txt, img = txt.to(device), img.to(device)
         out = model(txt, mask, segment, img)
     else:
         assert args.model == "mmbt"
@@ -168,11 +174,14 @@ def model_forward(i_epoch, model, args, criterion, batch):
         for param in model.enc.encoder.parameters():
             param.requires_grad = not freeze_txt
 
-        txt, img = txt.cuda(), img.cuda()
-        mask, segment = mask.cuda(), segment.cuda()
+        # txt, img = txt.cuda(), img.cuda()
+        txt, img = txt.to(device), img.to(device)
+        # mask, segment = mask.cuda(), segment.cuda()
+        mask, segment = mask.to(device), segment.to(device)
         out = model(txt, mask, segment, img)
 
-    tgt = tgt.cuda()
+    # tgt = tgt.cuda()
+    tgt = tgt.to(device)
     loss = criterion(out, tgt)
     return loss, out, tgt
 
@@ -192,7 +201,8 @@ def test(args):
 
     logger = create_logger("%s/logfile.log" % args.savedir, args)
     logger.info(model)
-    model.cuda()
+    # model.cuda()
+    model.to(device)
 
     # torch.save(args, os.path.join(args.savedir, "args.pt"))
 

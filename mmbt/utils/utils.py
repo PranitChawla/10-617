@@ -15,6 +15,7 @@ import os
 
 import torch
 
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 def set_seed(seed):
     random.seed(seed)
@@ -34,7 +35,11 @@ def save_checkpoint(state, is_best, checkpoint_path, filename="checkpoint.pt"):
 
 
 def load_checkpoint(model, path):
-    best_checkpoint = torch.load(path)
+    if device == 'cpu':
+        print(path)
+        best_checkpoint = torch.load(path,map_location='cpu')
+    else:
+        best_checkpoint = torch.load(path)
     model.load_state_dict(best_checkpoint["state_dict"])
 
 
