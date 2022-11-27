@@ -45,7 +45,7 @@ class MultimodalConcatBertClf(nn.Module):
         if self.regime == "attack":
             self.model = self.txtenc
         self.imgenc = ImageEncoder(args)
-        args.n_classes = 101
+        args.n_classes = len(args.labels)
         self.tokenizer = BertTokenizer.from_pretrained(args.bert_model, do_lower_case=True).tokenize
         last_size = args.hidden_sz + (args.img_hidden_sz * args.num_image_embeds)
         self.clf = nn.ModuleList()

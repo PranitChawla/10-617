@@ -10,8 +10,8 @@ class ViltClf(nn.Module):
         self.args = args
         self.backbone = ViltModel.from_pretrained("dandelin/vilt-b32-mlm")
         self.processor = ViltProcessor.from_pretrained("dandelin/vilt-b32-mlm")
-        last_size = 768
-        args.n_classes = 101
+        last_size = args.hidden_sz
+        args.n_classes = len(args.labels)
         self.regime = args.regime
         if self.regime == "attack":
             self.model = self.backbone

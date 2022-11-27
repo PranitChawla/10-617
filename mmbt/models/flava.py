@@ -10,11 +10,11 @@ class FlavaClf(nn.Module):
         super(FlavaClf, self).__init__()
         self.args = args
         self.regime = args.regime
-        args.n_classes = 101
+        args.n_classes = len(args.labels)
         self.backbone = FlavaModel.from_pretrained("facebook/flava-full")
         if self.regime == "attack":
             self.model = self.backbone
-        last_size = 768
+        last_size = args.hidden_sz
         self.clf = nn.ModuleList()
         for hidden in args.hidden:
             self.clf.append(nn.Linear(last_size, hidden))
