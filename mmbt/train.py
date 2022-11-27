@@ -48,7 +48,7 @@ def get_args(parser):
     parser.add_argument("--max_seq_len", type=int, default=512)
     parser.add_argument("--model", type=str, default="flava", choices=["bow", "img", "bert", "concatbow", "concatbert", "mmbt", "vilt", "flava"])
     parser.add_argument("--n_workers", type=int, default=0)
-    parser.add_argument("--name", type=str, default="concat_bert_model_test")
+    parser.add_argument("--name", type=str, default="flava_train_long")
     parser.add_argument("--num_image_embeds", type=int, default=1)
     parser.add_argument("--patience", type=int, default=10)
     parser.add_argument("--savedir", type=str, default="/home/scratch/rsaxena2/saved_models/")

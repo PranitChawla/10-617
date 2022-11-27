@@ -1,22 +1,8 @@
-# MultiModal BiTransformers (MMBT)
+# Adv Robustness Project (10-617)
 
 ## Introduction
 
-[MMBT](https://arxiv.org/abs/1909.02950) is the accompanying code repository for the paper titled, "Supervised Multimodal Bitransformers for Classifying Images and Text" by Douwe Kiela, Suvrat Bhooshan, Hamed Firooz, Ethan Perez and Davide Testuggine.
- 
-
-The goal of the repository is to provide an implementation of the MMBT model and replicate the experiments in the paper.
-
-Paper Link: https://arxiv.org/abs/1909.02950 
-
- ## Getting Started
-
-### Setup Enviroment
-
-
-* [PyTorch](http://pytorch.org/) version >= 1.0.0
-* Python version >= 3.6
-* ``` pip install torch torchvision sklearn pytorch-pretrained-bert numpy tqdm matplotlib```
+Install all dependencies using the requirements.txt file after creating a conda environment
 
 
 ### Model Training
@@ -29,7 +15,6 @@ The following paths need to be set to start training.
 
 - **data_path**: Assumes a subfolder for each dataset. 
 - **savedir**: Location to save model checkpoints.
-- **glove_path**: Path to glove embeds file. Needed for bow, concatbow models.
 
 Example command:
 
@@ -42,25 +27,3 @@ python mmbt/train.py --batch_sz 4 --gradient_accumulation_steps 40 \
  --patience 5 --dropout 0.1 --lr 5e-05 --warmup 0.1 --max_epochs 100 --seed 1
 ```  
 
-### MMBT in Transformers
-
-MMBT is also available in [HuggingFace Transformers](https://github.com/huggingface/transformers). See https://github.com/huggingface/transformers/tree/master/examples/research_projects/mm-imdb for an example that shows how easy it is to run MMBT in that framework.
-
- ## License
- 
- MMBT is licensed under Creative Commons-Non Commercial 4.0. See the LICENSE file for details.
- 
- 
-## Citation
-
-Please cite it as follows
-
-
-```
-@article{kiela2019supervised,
-  title={Supervised Multimodal Bitransformers for Classifying Images and Text},
-  author={Kiela, Douwe and Bhooshan, Suvrat and Firooz, Hamed and Testuggine, Davide},
-  journal={arXiv preprint arXiv:1909.02950},
-  year={2019}
-}
-```
