@@ -40,7 +40,7 @@ def load_checkpoint(model, path):
         best_checkpoint = torch.load(path,map_location='cpu')
     else:
         best_checkpoint = torch.load(path)
-    model.load_state_dict(best_checkpoint["state_dict"])
+    model.load_state_dict(best_checkpoint["state_dict"],strict=False)
 
 
 def truncate_seq_pair(tokens_a, tokens_b, max_length):

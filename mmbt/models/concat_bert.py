@@ -58,7 +58,8 @@ class MultimodalConcatBertClf(nn.Module):
         self.vocab = get_vocab(args)
         self.text_start_token = ["[CLS]"] if args.model != "mmbt" else ["[SEP]"]
         self.transforms = get_transforms(args)
-        self.data_dir = "../food101"
+        self.data_dir = args.data_model_path
+        self.regime = args.regime
 
     def custom_collate_fn(self,batch):
         lens = [row.shape[0] for row in batch]
@@ -68,21 +69,9 @@ class MultimodalConcatBertClf(nn.Module):
         text_tensor = torch.zeros(bsz, max_seq_len).long()
         segment_tensor = torch.zeros(bsz, max_seq_len).long()
 
-        # img_tensor = None
-        # if args.model in ["img", "concatbow", "concatbert", "mmbt"]:
-        #     img_tensor = torch.stack([row[2] for row in batch])
-
-        # if args.task_type == "multilabel":
-        #     # Multilabel case
-        #     tgt_tensor = torch.stack([row[3] for row in batch])
-        # else:
-        #     # Single Label case
-        #     tgt_tensor = torch.cat([row[3] for row in batch]).long()
-
         for i_batch, (input_row, length) in enumerate(zip(batch, lens)):
             tokens = input_row
             text_tensor[i_batch, :length] = tokens
-            # segment_tensor[i_batch, :length] = segment
             mask_tensor[i_batch, :length] = 1
 
         return text_tensor, mask_tensor, segment_tensor
@@ -102,46 +91,34 @@ class MultimodalConcatBertClf(nn.Module):
         return sentence
     
     def forward(self, txt, mask = None, segment = None, img = None):
-        import ipdb
-        # ipdb.set_trace()
         if type(txt) != type(torch.ones(1)):
             txt_list = []
             img = []
-            # segment = []
             for input in txt:
                 txt_list.append(self.convert_text(input[1]))
-                # img.append(input[1])
                 new_path = input[0]
-                # print(new_path)
-                # print()
                 image = Image.open(
                     os.path.join(self.data_dir, new_path)
                 ).convert("RGB")
                 image = self.transforms(image)
                 img.append(image)
-                # segment.append(input[1])
-            #ipdb.set_trace()
-            #txt_list.append(torch.LongTensor([1,2,3,4,5,6]))
-
-            #txt = torch.Tensor(txt).long()
             txt, mask, segment = self.custom_collate_fn(txt_list)
-            #txt, mask = self.text_to_ids(txt).to(device)
-            # ipdb.set_trace()
             txt = txt.to(device).long()
             mask = mask.to(device).long()
             segment = segment.to(device).long()
             img = torch.stack(tuple(img),dim=0).to(device)
-            # print(img.shape)
-            
-            # segment = torch.stack(segment,dim=0).to(device).long()
-        # txt = self.txtenc(txt, mask, segment)
-        txt = self.model(txt, mask, segment) 
+
+        # txt = self.model(txt, mask, segment) 
+        txt = self.txtenc(txt, mask, segment) 
+
 
         img = self.imgenc(img)
         img = torch.flatten(img, start_dim=1)
         out = torch.cat([txt, img], -1)
         for layer in self.clf:
             out = layer(out)
-        return out.detach()
-        # if self.regime == "attack"
-        #     return out
+        if self.regime == "attack":
+            return out.detach()
+        else:
+            return out
+
