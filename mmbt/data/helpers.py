@@ -23,17 +23,25 @@ from transformers import ViltProcessor, FlavaProcessor
 
 
 def get_transforms(args):
-    return transforms.Compose(
+    if args.model in ["vilt","flava"]:
+        return transforms.Compose(
         [
-            transforms.Resize(256),
-            transforms.CenterCrop(224),
-            transforms.ToTensor(),
-            transforms.Normalize(
-                mean=[0.46777044, 0.44531429, 0.40661017],
-                std=[0.12221994, 0.12145835, 0.14380469],
-            ),
+            transforms.Resize((256,256)),
+            transforms.ToTensor()
         ]
     )
+    else:
+        return transforms.Compose(
+            [
+                transforms.Resize(256),
+                transforms.CenterCrop(224),
+                transforms.ToTensor(),
+                transforms.Normalize(
+                    mean=[0.46777044, 0.44531429, 0.40661017],
+                    std=[0.12221994, 0.12145835, 0.14380469],
+                ),
+            ]
+        )
 
 
 def get_labels_and_frequencies(path):

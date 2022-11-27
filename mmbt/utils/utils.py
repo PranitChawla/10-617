@@ -109,3 +109,17 @@ def numpy_seed(seed, *addl_seeds):
         yield
     finally:
         np.random.set_state(state)
+
+
+def convert_to_attack_output(max_seq_len):
+    list_objs = []
+    for input_vals in inputs:
+        image_name = input_vals[0]
+        text = input_vals[1]
+        image = Image.open(os.path.join(self.data_dir, image_name)).convert("RGB")
+        image = self.transforms(image)
+        merged_ins = self.processor(image, text, return_tensors="pt", padding = "max_length", truncation = True, max_length = self.args.max_seq_len)
+        list_objs.append(merged_ins)
+    inputs = default_data_collator(list_objs)
+    for key in list(inputs.keys()):
+        inputs[key] = inputs[key].squeeze(dim=1).cuda()

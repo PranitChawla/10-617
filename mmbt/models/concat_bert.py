@@ -40,9 +40,12 @@ class MultimodalConcatBertClf(nn.Module):
     def __init__(self, args):
         super(MultimodalConcatBertClf, self).__init__()
         self.args = args
+        self.regime = args.regime
         self.txtenc = BertEncoder(args)
-        self.model = self.txtenc
+        if self.regime == "attack":
+            self.model = self.txtenc
         self.imgenc = ImageEncoder(args)
+        args.n_classes = 101
         self.tokenizer = BertTokenizer.from_pretrained(args.bert_model, do_lower_case=True).tokenize
         last_size = args.hidden_sz + (args.img_hidden_sz * args.num_image_embeds)
         self.clf = nn.ModuleList()
@@ -59,7 +62,7 @@ class MultimodalConcatBertClf(nn.Module):
         self.text_start_token = ["[CLS]"] if args.model != "mmbt" else ["[SEP]"]
         self.transforms = get_transforms(args)
         self.data_dir = args.data_model_path
-        self.regime = args.regime
+        
 
     def custom_collate_fn(self,batch):
         lens = [row.shape[0] for row in batch]
@@ -76,12 +79,8 @@ class MultimodalConcatBertClf(nn.Module):
 
         return text_tensor, mask_tensor, segment_tensor
 
-
-
     def convert_text(self, text):
         sentence = (self.text_start_token+ self.tokenizer(text)[: (self.args.max_seq_len - 1)])
-        # segment = torch.zeros(len(sentence))
-
         sentence = torch.LongTensor(
             [
                 self.vocab.stoi[w] if w in self.vocab.stoi else self.vocab.stoi["[UNK]"]
@@ -89,29 +88,29 @@ class MultimodalConcatBertClf(nn.Module):
             ]
         )
         return sentence
+
+    def convert_to_attack_output(self, inputs):
+        txt_list = []
+        img = []
+        for input in inputs:
+            txt_list.append(self.convert_text(input[1]))
+            new_path = input[0]
+            image = Image.open(
+                os.path.join(self.data_dir, new_path)
+            ).convert("RGB")
+            image = self.transforms(image)
+            img.append(image)
+        txt, mask, segment = self.custom_collate_fn(txt_list)
+        txt = txt.to(device).long()
+        mask = mask.to(device).long()
+        segment = segment.to(device).long()
+        img = torch.stack(tuple(img),dim=0).to(device)
+        return txt, mask, segment, img
     
     def forward(self, txt, mask = None, segment = None, img = None):
-        if type(txt) != type(torch.ones(1)):
-            txt_list = []
-            img = []
-            for input in txt:
-                txt_list.append(self.convert_text(input[1]))
-                new_path = input[0]
-                image = Image.open(
-                    os.path.join(self.data_dir, new_path)
-                ).convert("RGB")
-                image = self.transforms(image)
-                img.append(image)
-            txt, mask, segment = self.custom_collate_fn(txt_list)
-            txt = txt.to(device).long()
-            mask = mask.to(device).long()
-            segment = segment.to(device).long()
-            img = torch.stack(tuple(img),dim=0).to(device)
-
-        # txt = self.model(txt, mask, segment) 
+        if self.regime == "attack":
+            txt, mask, segment, img = self.convert_to_attack_output(txt)
         txt = self.txtenc(txt, mask, segment) 
-
-
         img = self.imgenc(img)
         img = torch.flatten(img, start_dim=1)
         out = torch.cat([txt, img], -1)

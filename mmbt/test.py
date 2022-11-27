@@ -24,7 +24,7 @@ from utils.utils import *
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 def get_args(parser):
-    parser.add_argument("--batch_sz", type=int, default=256)
+    parser.add_argument("--batch_sz", type=int, default=128)
     parser.add_argument("--bert_model", type=str, default="bert-base-uncased", choices=["bert-base-uncased", "bert-large-uncased"])
     parser.add_argument("--data_path", type=str, default="/home/scratch/rsaxena2/")
     parser.add_argument("--data_model_path", type=str, default="/home/scratch/rsaxena2/food101/")
@@ -45,9 +45,9 @@ def get_args(parser):
     parser.add_argument("--lr_patience", type=int, default=2)
     parser.add_argument("--max_epochs", type=int, default=100)
     parser.add_argument("--max_seq_len", type=int, default=512)
-    parser.add_argument("--model", type=str, default="vilt", choices=["bow", "img", "bert", "concatbow", "concatbert", "mmbt", "vilt", "flava"])
+    parser.add_argument("--model", type=str, default="flava", choices=["bow", "img", "bert", "concatbow", "concatbert", "mmbt", "vilt", "flava"])
     parser.add_argument("--n_workers", type=int, default=12)
-    parser.add_argument("--name", type=str, default="vilt_model")
+    parser.add_argument("--name", type=str, default="flava_model")
     parser.add_argument("--num_image_embeds", type=int, default=1)
     parser.add_argument("--patience", type=int, default=10)
     parser.add_argument("--savedir", type=str, default="/home/scratch/rsaxena2/saved_models/")
@@ -109,9 +109,8 @@ def model_eval(i_epoch, data, model, args, criterion, store_preds=False):
     with torch.no_grad():
         losses, preds, tgts = [], [], []
         cnt = 0
-        for batch in data:
-            if cnt%1==0:
-                print(cnt,len(data))
+        for batch in tqdm(data):
+                # print(cnt,len(data))
             cnt += 1
             loss, out, tgt = model_forward(i_epoch, model, args, criterion, batch)
             losses.append(loss.item())
@@ -143,49 +142,50 @@ def model_eval(i_epoch, data, model, args, criterion, store_preds=False):
 
 
 def model_forward(i_epoch, model, args, criterion, batch):
-    if args.model in ["vilt","flava"]:
-        inputs, tgt = batch
-        for key in list(inputs.keys()):
-            inputs[key] = inputs[key].squeeze().cuda()
-        tgt = tgt.squeeze()
-    else:
-        txt, segment, mask, img, tgt = batch
+    with torch.no_grad():
+        if args.model in ["vilt","flava"]:
+            inputs, tgt = batch
+            for key in list(inputs.keys()):
+                inputs[key] = inputs[key].squeeze().cuda()
+            tgt = tgt.squeeze()
+        else:
+            txt, segment, mask, img, tgt = batch
 
-    freeze_img = i_epoch < args.freeze_img
-    freeze_txt = i_epoch < args.freeze_txt
+        freeze_img = i_epoch < args.freeze_img
+        freeze_txt = i_epoch < args.freeze_txt
 
-    if args.model == "bow":
-        txt = txt.cuda()
-        out = model(txt)
-    elif args.model == "img":
-        img = img.cuda()
-        out = model(img)
-    elif args.model == "concatbow":
-        txt, img = txt.cuda(), img.cuda()
-        out = model(txt, img)
-    elif args.model == "bert":
-        txt, mask, segment = txt.cuda(), mask.cuda(), segment.cuda()
-        out = model(txt, mask, segment)
-    elif args.model == "concatbert":
-        txt, img = txt.cuda(), img.cuda()
-        mask, segment = mask.cuda(), segment.cuda()
-        out = model(txt, mask, segment, img)
-    elif args.model in ["vilt","flava"]:
-        out = model(inputs)
-    else:
-        assert args.model == "mmbt"
-        for param in model.enc.img_encoder.parameters():
-            param.requires_grad = not freeze_img
-        for param in model.enc.encoder.parameters():
-            param.requires_grad = not freeze_txt
+        if args.model == "bow":
+            txt = txt.cuda()
+            out = model(txt)
+        elif args.model == "img":
+            img = img.cuda()
+            out = model(img)
+        elif args.model == "concatbow":
+            txt, img = txt.cuda(), img.cuda()
+            out = model(txt, img)
+        elif args.model == "bert":
+            txt, mask, segment = txt.cuda(), mask.cuda(), segment.cuda()
+            out = model(txt, mask, segment)
+        elif args.model == "concatbert":
+            txt, img = txt.cuda(), img.cuda()
+            mask, segment = mask.cuda(), segment.cuda()
+            out = model(txt, mask, segment, img)
+        elif args.model in ["vilt","flava"]:
+            out = model(inputs)
+        else:
+            assert args.model == "mmbt"
+            for param in model.enc.img_encoder.parameters():
+                param.requires_grad = not freeze_img
+            for param in model.enc.encoder.parameters():
+                param.requires_grad = not freeze_txt
 
-        txt, img = txt.cuda(), img.cuda()
-        mask, segment = mask.cuda(), segment.cuda()
-        out = model(txt, mask, segment, img)
+            txt, img = txt.cuda(), img.cuda()
+            mask, segment = mask.cuda(), segment.cuda()
+            out = model(txt, mask, segment, img)
 
-    tgt = tgt.cuda()
-    loss = criterion(out, tgt)
-    return loss, out, tgt
+        tgt = tgt.cuda()
+        loss = criterion(out, tgt)
+        return loss, out, tgt
 
 
 def test(args):
