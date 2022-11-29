@@ -25,7 +25,7 @@ from utils.utils import *
 
 
 def get_args(parser):
-    parser.add_argument("--batch_sz", type=int, default=4)
+    parser.add_argument("--batch_sz", type=int, default=32)
     parser.add_argument("--bert_model", type=str, default="bert-base-uncased", choices=["bert-base-uncased", "bert-large-uncased"])
     parser.add_argument("--data_path", type=str, default="/home/scratch/rsaxena2/")
     parser.add_argument("--data_model_path", type=str, default="/home/scratch/rsaxena2/food101/")
@@ -46,9 +46,9 @@ def get_args(parser):
     parser.add_argument("--lr_patience", type=int, default=2)
     parser.add_argument("--max_epochs", type=int, default=100)
     parser.add_argument("--max_seq_len", type=int, default=512)
-    parser.add_argument("--model", type=str, default="flava", choices=["bow", "img", "bert", "concatbow", "concatbert", "mmbt", "vilt", "flava"])
-    parser.add_argument("--n_workers", type=int, default=0)
-    parser.add_argument("--name", type=str, default="flava_train_long")
+    parser.add_argument("--model", type=str, default="vilt", choices=["bow", "img", "bert", "concatbow", "concatbert", "mmbt", "vilt", "flava"])
+    parser.add_argument("--n_workers", type=int, default=8)
+    parser.add_argument("--name", type=str, default="vilt_test_syn")
     parser.add_argument("--num_image_embeds", type=int, default=1)
     parser.add_argument("--patience", type=int, default=10)
     parser.add_argument("--savedir", type=str, default="/home/scratch/rsaxena2/saved_models/")

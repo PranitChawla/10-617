@@ -20,12 +20,44 @@ from utils.utils import truncate_seq_pair, numpy_seed
 # import augly.image as imaugs
 from transformers import ViltProcessor
 import torchvision.transforms as torch_transforms
+from nltk.tokenize import word_tokenize
+from nltk.corpus import wordnet
+from nltk.corpus import stopwords
+import random
+
+stop_words = set(stopwords.words('english'))
+
+
+def get_syn_flipped(s, p=0.3):
+    word_tokens = word_tokenize(s)
+    x = []
+    for word in word_tokens:
+        if not word.isalpha():
+            x.append(word)
+        elif word.lower() in stop_words:
+            x.append(word)
+        else:
+            u = random.random()
+            if u <= p:
+                syns = list(set([i.name() for syn in wordnet.synsets(word) for i in syn.lemmas() ]))
+                if syns:
+                    x.append(random.choice(syns))
+                else:
+                    x.append(word)
+            else:
+                x.append(word)
+    return " ".join(x)
+
 
 class JsonlDataset(Dataset):
     def __init__(self, data_path, tokenizer, transforms, vocab, args, noisy_transforms=None):
         path = data_path.split('.jsonl')[0]+'_filtered'+'.jsonl'
         data_path = '.'.join([data_path.split('.jsonl')[0]+'_filtered','jsonl'])
         self.data = [json.loads(l) for l in open(data_path)]
+
+        self.train_mode = False
+        if 'train' in data_path:
+            self.train_mode = True
 
         #   if 'test' in data_path:
         #       data_path = '../food101/test_filtered_del.jsonl'
@@ -71,6 +103,8 @@ class JsonlDataset(Dataset):
             else:
                 image = self.transforms(image)
             text = self.data[index]["text"]
+            if self.train_mode:
+                text = get_syn_flipped(text, 0.3)
             inputs = self.tokenizer(image, text, return_tensors="pt", padding = "max_length", truncation = True, max_length = self.args.max_seq_len)
             if self.args.task_type == "multilabel":
                 label = torch.zeros(self.n_classes)
