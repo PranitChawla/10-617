@@ -58,7 +58,7 @@ def get_args(parser):
     parser.add_argument("--warmup", type=float, default=0.1)
     parser.add_argument("--weight_classes", type=int, default=1)
     parser.add_argument("--regime", type=str, default="train", choices = ["attack", "train", "test"])
-
+    parser.add_argument("--image_noise_probability", type=int, default=0)
 
 def get_criterion(args):
     if args.task_type == "multilabel":

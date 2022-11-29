@@ -15,14 +15,14 @@ from PIL import Image
 
 import torch
 from torch.utils.data import Dataset
-
+import random
 from utils.utils import truncate_seq_pair, numpy_seed
 # import augly.image as imaugs
 from transformers import ViltProcessor
 import torchvision.transforms as torch_transforms
 
 class JsonlDataset(Dataset):
-    def __init__(self, data_path, tokenizer, transforms, vocab, args):
+    def __init__(self, data_path, tokenizer, transforms, vocab, args, noisy_transforms=None):
         path = data_path.split('.jsonl')[0]+'_filtered'+'.jsonl'
         data_path = '.'.join([data_path.split('.jsonl')[0]+'_filtered','jsonl'])
         self.data = [json.loads(l) for l in open(data_path)]
@@ -51,7 +51,7 @@ class JsonlDataset(Dataset):
             self.max_seq_len -= args.num_image_embeds
 
         self.transforms = transforms
-
+        self.noisy_transforms = noisy_transforms
         if self.args.model == "vilt" or self.args.model == "flava":
             self.transforms = torch_transforms.Compose([torch_transforms.Resize((256,256)),torch_transforms.ToTensor()])
         
@@ -123,7 +123,11 @@ class JsonlDataset(Dataset):
                 ).convert("RGB")
             else:
                 image = Image.fromarray(128 * np.ones((256, 256, 3), dtype=np.uint8))
-            image = self.transforms(image)
+
+            if torch.rand(1) < self.args.image_noise_probability:
+                image = random.choice(self.noisy_transforms)(image)
+            else:
+                image = self.transforms(image)
 
         if self.args.model == "mmbt":
             # The first SEP is part of Image Token.

@@ -14,22 +14,21 @@ from collections import Counter
 
 import torch
 import torchvision.transforms as transforms
-from pytorch_pretrained_bert import BertTokenizer
-from torch.utils.data import DataLoader
-
 from data.dataset import JsonlDataset
 from data.vocab import Vocab
+from pytorch_pretrained_bert import BertTokenizer
+from torch.utils.data import DataLoader
 from transformers import ViltProcessor, FlavaProcessor
 
 
 def get_transforms(args):
-    if args.model in ["vilt","flava"]:
+    if args.model in ["vilt", "flava"]:
         return transforms.Compose(
-        [
-            transforms.Resize((256,256)),
-            transforms.ToTensor()
-        ]
-    )
+            [
+                transforms.Resize((256, 256)),
+                transforms.ToTensor()
+            ]
+        )
     else:
         return transforms.Compose(
             [
@@ -43,10 +42,94 @@ def get_transforms(args):
             ]
         )
 
+def salt_and_pepper(frequency=0.05):
+    def _salt_and_pepper(image):
+        mask =  torch.rand(image.shape, device=torch.device("cuda")) < frequency
+        new_vals = (torch.rand(image.shape, device=torch.device("cuda")) < 0.5).float()
+        image[mask] = new_vals[mask]
+        return image
+    return _salt_and_pepper
+
+
+def get_noisy_transforms(args):
+    noisy_transforms = []
+
+    # Color jitter
+    if args.model in ["vilt", "flava"]:
+        noisy_transforms.append(transforms.Compose(
+            [
+                transforms.Resize((256, 256)),
+                transforms.ToTensor(),
+                transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.2),
+            ]
+        )
+        )
+    else:
+        noisy_transforms.append(transforms.Compose(
+            [
+                transforms.Resize(256),
+                transforms.CenterCrop(224),
+                transforms.ToTensor(),
+                transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.2),
+                transforms.Normalize(
+                    mean=[0.46777044, 0.44531429, 0.40661017],
+                    std=[0.12221994, 0.12145835, 0.14380469],
+                ),
+            ]
+        ))
+
+    # Gaussian blur
+    if args.model in ["vilt", "flava"]:
+        noisy_transforms.append(transforms.Compose(
+            [
+                transforms.Resize((256, 256)),
+                transforms.ToTensor(),
+                transforms.GaussianBlur(kernel_size=16, sigma=(1., 2.)),
+            ]
+        )
+        )
+    else:
+        noisy_transforms.append(transforms.Compose(
+            [
+                transforms.Resize(256),
+                transforms.CenterCrop(224),
+                transforms.ToTensor(),
+                transforms.GaussianBlur(kernel_size=16, sigma=(1.,2.)),
+                transforms.Normalize(
+                    mean=[0.46777044, 0.44531429, 0.40661017],
+                    std=[0.12221994, 0.12145835, 0.14380469],
+                ),
+            ]
+        ))
+
+    # Salt and pepper
+    if args.model in ["vilt", "flava"]:
+        noisy_transforms.append(transforms.Compose(
+            [
+                transforms.Resize((256, 256)),
+                transforms.ToTensor(),
+                salt_and_pepper(frequency=0.05),
+            ]
+        )
+        )
+    else:
+        noisy_transforms.append(transforms.Compose(
+            [
+                transforms.Resize(256),
+                transforms.CenterCrop(224),
+                transforms.ToTensor(),
+                salt_and_pepper(frequency=.05),
+                transforms.Normalize(
+                    mean=[0.46777044, 0.44531429, 0.40661017],
+                    std=[0.12221994, 0.12145835, 0.14380469],
+                ),
+            ]
+        ))
+    return noisy_transforms
 
 def get_labels_and_frequencies(path):
     label_freqs = Counter()
-    path = path.split('.jsonl')[0]+'_filtered'+'.jsonl'
+    path = path.split('.jsonl')[0] + '_filtered' + '.jsonl'
     data_labels = [json.loads(line)["label"] for line in open(path)]
     if type(data_labels[0]) == list:
         for label_row in data_labels:
@@ -112,7 +195,6 @@ def collate_fn(batch, args):
 
 
 def get_data_loaders(args):
-
     if args.model in ["bert", "mmbt", "concatbert"]:
         tokenizer = BertTokenizer.from_pretrained(args.bert_model, do_lower_case=True).tokenize
     elif args.model == "vilt":
@@ -121,7 +203,10 @@ def get_data_loaders(args):
         tokenizer = FlavaProcessor.from_pretrained("facebook/flava-full")
 
     transforms = get_transforms(args)
-
+    if args.image_noise_probability>0:
+        noisy_transforms = get_noisy_transforms(args)
+    else:
+        noisy_transforms = None
     args.labels, args.label_freqs = get_labels_and_frequencies(os.path.join(args.data_path, args.task, "train.jsonl"))
     vocab = get_vocab(args)
     args.vocab = vocab
@@ -134,6 +219,7 @@ def get_data_loaders(args):
         transforms,
         vocab,
         args,
+        noisy_transforms=noisy_transforms
     )
 
     args.train_data_len = len(train)
