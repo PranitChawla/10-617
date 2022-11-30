@@ -66,7 +66,10 @@ class JsonlDataset(Dataset):
         if self.args.model in ["vilt","flava"]:
             new_path = 'images/' + ('/').join(self.data[index]["img"].split('/')[1:])
             image = Image.open(os.path.join(self.data_dir, new_path)).convert("RGB")
-            image = self.transforms(image)
+            if torch.rand(1) < self.args.image_noise_probability:
+                image = random.choice(self.noisy_transforms)(image)
+            else:
+                image = self.transforms(image)
             text = self.data[index]["text"]
             inputs = self.tokenizer(image, text, return_tensors="pt", padding = "max_length", truncation = True, max_length = self.args.max_seq_len)
             if self.args.task_type == "multilabel":
