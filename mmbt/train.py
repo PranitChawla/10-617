@@ -25,7 +25,7 @@ from utils.utils import *
 
 
 def get_args(parser):
-    parser.add_argument("--batch_sz", type=int, default=32)
+    parser.add_argument("--batch_sz", type=int, default=4)
     parser.add_argument("--bert_model", type=str, default="bert-base-uncased", choices=["bert-base-uncased", "bert-large-uncased"])
     parser.add_argument("--data_path", type=str, default="/home/scratch/rsaxena2/")
     parser.add_argument("--data_model_path", type=str, default="/home/scratch/rsaxena2/food101/")
@@ -46,9 +46,9 @@ def get_args(parser):
     parser.add_argument("--lr_patience", type=int, default=2)
     parser.add_argument("--max_epochs", type=int, default=100)
     parser.add_argument("--max_seq_len", type=int, default=512)
-    parser.add_argument("--model", type=str, default="vilt", choices=["bow", "img", "bert", "concatbow", "concatbert", "mmbt", "vilt", "flava"])
+    parser.add_argument("--model", type=str, default="concatbert", choices=["bow", "img", "bert", "concatbow", "concatbert", "mmbt", "vilt", "flava"])
     parser.add_argument("--n_workers", type=int, default=8)
-    parser.add_argument("--name", type=str, default="vilt_test_syn")
+    parser.add_argument("--name", type=str, default="concatbert_test_syn_2")
     parser.add_argument("--num_image_embeds", type=int, default=1)
     parser.add_argument("--patience", type=int, default=10)
     parser.add_argument("--savedir", type=str, default="/home/scratch/rsaxena2/saved_models/")
@@ -58,7 +58,8 @@ def get_args(parser):
     parser.add_argument("--warmup", type=float, default=0.1)
     parser.add_argument("--weight_classes", type=int, default=1)
     parser.add_argument("--regime", type=str, default="train", choices = ["attack", "train", "test"])
-    parser.add_argument("--image_noise_probability", type=int, default=0)
+    parser.add_argument("--text_syn_probability", type=float, default=0.3)
+    parser.add_argument("--image_noise_probability", type=float, default=0.2)
 
 def get_criterion(args):
     if args.task_type == "multilabel":
@@ -75,28 +76,28 @@ def get_criterion(args):
 
 
 def get_optimizer(model, args):
-    if args.model in ["bert", "concatbert", "mmbt"]:
-        total_steps = (
-            args.train_data_len
-            / args.batch_sz
-            / args.gradient_accumulation_steps
-            * args.max_epochs
-        )
-        param_optimizer = list(model.named_parameters())
-        no_decay = ["bias", "LayerNorm.bias", "LayerNorm.weight"]
-        optimizer_grouped_parameters = [
-            {"params": [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)], "weight_decay": 0.01},
-            {"params": [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], "weight_decay": 0.0,},
-        ]
-        optimizer = BertAdam(
-            optimizer_grouped_parameters,
-            lr=args.lr,
-            warmup=args.warmup,
-            t_total=total_steps,
-        )
-    else:
-        optimizer = optim.Adam(model.parameters(), lr=args.lr)
-
+    # if args.model in ["bert", "concatbert", "mmbt"]:
+    #     total_steps = (
+    #         args.train_data_len
+    #         / args.batch_sz
+    #         / args.gradient_accumulation_steps
+    #         * args.max_epochs
+    #     )
+    #     print(args.train_data_len,total_steps)
+    #     param_optimizer = list(model.named_parameters())
+    #     no_decay = ["bias", "LayerNorm.bias", "LayerNorm.weight"]
+    #     optimizer_grouped_parameters = [
+    #         {"params": [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)], "weight_decay": 0.01},
+    #         {"params": [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], "weight_decay": 0.0,},
+    #     ]
+    #     optimizer = BertAdam(
+    #         optimizer_grouped_parameters,
+    #         lr=args.lr,
+    #         warmup=args.warmup,
+    #         t_total=total_steps,
+    #     )
+    # else:
+    optimizer = optim.Adam(model.parameters(), lr=args.lr)
     return optimizer
 
 

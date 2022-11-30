@@ -58,6 +58,7 @@ class JsonlDataset(Dataset):
         self.train_mode = False
         if 'train' in data_path:
             self.train_mode = True
+        self.syn_flip_prob = args.text_syn_probability
 
         #   if 'test' in data_path:
         #       data_path = '../food101/test_filtered_del.jsonl'
@@ -104,7 +105,9 @@ class JsonlDataset(Dataset):
                 image = self.transforms(image)
             text = self.data[index]["text"]
             if self.train_mode:
-                text = get_syn_flipped(text, 0.3)
+                # print("Prev sent: ", text)
+                text = get_syn_flipped(text, self.syn_flip_prob)
+                # print("Flipped sent: ", text)
             inputs = self.tokenizer(image, text, return_tensors="pt", padding = "max_length", truncation = True, max_length = self.args.max_seq_len)
             if self.args.task_type == "multilabel":
                 label = torch.zeros(self.n_classes)
@@ -118,17 +121,26 @@ class JsonlDataset(Dataset):
             return inputs, label
 
         if self.args.task == "vsnli":
-            sent1 = self.tokenizer(self.data[index]["sentence1"])
-            sent2 = self.tokenizer(self.data[index]["sentence2"])
+            sent1 = self.data[index]["sentence1"]
+            if self.train_mode:
+                sent1 = get_syn_flipped(sent1, self.syn_flip_prob)
+            sent1 = self.tokenizer(sent1)
+            sent2 = self.data[index]["sentence2"]
+            if self.train_mode:
+                sent2 = get_syn_flipped(sent2, self.syn_flip_prob)
+            sent2 = self.tokenizer(sent2)
             truncate_seq_pair(sent1, sent2, self.args.max_seq_len - 3)
             sentence = self.text_start_token + sent1 + ["[SEP]"] + sent2 + ["[SEP]"]
             segment = torch.cat(
                 [torch.zeros(2 + len(sent1)), torch.ones(len(sent2) + 1)]
             )
         else:
+            temp = self.data[index]["text"]
+            if self.train_mode:
+                temp = get_syn_flipped(temp, self.syn_flip_prob)
             sentence = (
                 self.text_start_token
-                + self.tokenizer(self.data[index]["text"])[
+                + self.tokenizer(temp)[
                     : (self.args.max_seq_len - 1)
                 ]
             )
@@ -161,7 +173,7 @@ class JsonlDataset(Dataset):
             else:
                 image = Image.fromarray(128 * np.ones((256, 256, 3), dtype=np.uint8))
 
-            if torch.rand(1) < self.args.image_noise_probability:
+            if torch.rand(1) < self.args.image_noise_probability and self.train_mode:
                 image = random.choice(self.noisy_transforms)(image)
             else:
                 image = self.transforms(image)

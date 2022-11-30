@@ -44,8 +44,10 @@ def get_transforms(args):
 
 def salt_and_pepper(frequency=0.05):
     def _salt_and_pepper(image):
-        mask =  torch.rand(image.shape, device=torch.device("cuda")) < frequency
-        new_vals = (torch.rand(image.shape, device=torch.device("cuda")) < 0.5).float()
+        # mask =  torch.rand(image.shape, device=torch.device("cuda")) < frequency
+        mask =  torch.rand(image.shape) < frequency
+        # new_vals = (torch.rand(image.shape, device=torch.device("cuda")) < 0.5).float()
+        new_vals = (torch.rand(image.shape) < 0.5).float()
         image[mask] = new_vals[mask]
         return image
     return _salt_and_pepper
@@ -84,7 +86,7 @@ def get_noisy_transforms(args):
             [
                 transforms.Resize((256, 256)),
                 transforms.ToTensor(),
-                transforms.GaussianBlur(kernel_size=16, sigma=(1., 2.)),
+                transforms.GaussianBlur(kernel_size=15, sigma=(1., 2.)),
             ]
         )
         )
@@ -94,7 +96,7 @@ def get_noisy_transforms(args):
                 transforms.Resize(256),
                 transforms.CenterCrop(224),
                 transforms.ToTensor(),
-                transforms.GaussianBlur(kernel_size=16, sigma=(1.,2.)),
+                transforms.GaussianBlur(kernel_size=15, sigma=(1.,2.)),
                 transforms.Normalize(
                     mean=[0.46777044, 0.44531429, 0.40661017],
                     std=[0.12221994, 0.12145835, 0.14380469],
