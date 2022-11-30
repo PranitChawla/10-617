@@ -27,6 +27,7 @@ class ViltClf(nn.Module):
         self.clf.append(nn.Linear(last_size, args.n_classes))
 
         self.transforms = get_transforms(args)
+        print(self.transforms)
         self.data_dir = args.data_model_path
         self.args.max_seq_len = 40
 
@@ -48,7 +49,9 @@ class ViltClf(nn.Module):
     def forward(self, inputs):
         if self.regime == "attack":
             inputs = self.convert_to_attack_output(inputs)
-        outputs= self.backbone(**inputs)
+            outputs = self.backbone(**inputs)
+        else:
+            outputs= self.backbone(**inputs)
         out = outputs.pooler_output
         for layer in self.clf:
             out = layer(out)

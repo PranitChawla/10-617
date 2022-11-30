@@ -20,12 +20,16 @@ from utils.utils import truncate_seq_pair, numpy_seed
 # import augly.image as imaugs
 from transformers import ViltProcessor
 import torchvision.transforms as torch_transforms
+import re
 
 class JsonlDataset(Dataset):
     def __init__(self, data_path, tokenizer, transforms, vocab, args):
         path = data_path.split('.jsonl')[0]+'_filtered'+'.jsonl'
         data_path = '.'.join([data_path.split('.jsonl')[0]+'_filtered','jsonl'])
-        self.data = [json.loads(l) for l in open(data_path)]
+        if 'test' in data_path and args.regime == "test":
+            self.data = [json.loads(l) for l in open(data_path)][:args.test_size]
+        else:
+            self.data = [json.loads(l) for l in open(data_path)]
 
         #   if 'test' in data_path:
         #       data_path = '../food101/test_filtered_del.jsonl'
@@ -52,8 +56,8 @@ class JsonlDataset(Dataset):
 
         self.transforms = transforms
 
-        if self.args.model == "vilt" or self.args.model == "flava":
-            self.transforms = torch_transforms.Compose([torch_transforms.Resize((256,256)),torch_transforms.ToTensor()])
+        # if self.args.model == "vilt" or self.args.model == "flava":
+        #     self.transforms = torch_transforms.Compose([torch_transforms.Resize((256,256)),torch_transforms.ToTensor()])
         
         
 
@@ -151,7 +155,36 @@ class TextAttackDataset(Dataset):
         return len(self.data)
 
     def __getitem__(self, index):
-        sentence = (' ').join(self.tokenizer(self.data[index]["text"])[: (self.max_seq_len - 1)])
+        sentence = (' ').join(self.data[index]["text"].split(' ')[: (self.max_seq_len - 1)])
         new_path = 'images/' + ('/').join(self.data[index]["img"].split('/')[1:])
         label = torch.LongTensor([self.args.labels.index(self.data[index]["label"])])
         return (new_path, sentence) , label.item()
+
+
+
+class ImageAttackDataset(Dataset):
+    def __init__(self, data,  tokenizer, transforms, args):
+        self.data = data
+        self.args = args
+        if self.args.model == "vilt":
+            self.max_seq_len = 40
+        else:
+            self.max_seq_len = args.max_seq_len
+        self.transforms = transforms
+        self.tokenizer = tokenizer
+        self.data_dir = args.data_model_path
+        print(self.data.columns)
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, index):
+        text = self.data.iloc[index]["perturbed_text"].split('<SPLIT>')[-1].split('[[[[Hypothesis]]]]:')[-1]
+        text = re.sub(r"[\([{})\]]", "", text)
+        img_path = self.data.iloc[index]["perturbed_text"].split('<SPLIT>')[0].split('[[[[Premise]]]]:')[-1][1:]
+        # print(img_path)
+        image = Image.open(os.path.join(self.data_dir, img_path)).convert("RGB")
+        image = self.transforms(image)
+        label = int(self.data.iloc[index]['ground_truth_output'])
+        label = torch.LongTensor([label])
+        inputs = self.tokenizer(image, text, return_tensors="pt", padding = "max_length", truncation = True, max_length = self.args.max_seq_len)
+        return inputs, label

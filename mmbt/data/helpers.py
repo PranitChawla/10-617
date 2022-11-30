@@ -113,7 +113,7 @@ def collate_fn(batch, args):
 
 def get_data_loaders(args):
 
-    if args.model in ["bert", "mmbt", "concatbert"]:
+    if args.model in ["img", "bert", "mmbt", "concatbert"]:
         tokenizer = BertTokenizer.from_pretrained(args.bert_model, do_lower_case=True).tokenize
     elif args.model == "vilt":
         tokenizer = ViltProcessor.from_pretrained("dandelin/vilt-b32-mlm")

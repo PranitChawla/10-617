@@ -51,9 +51,9 @@ def get_args(parser):
     parser.add_argument("--lr_patience", type=int, default=2)
     parser.add_argument("--max_epochs", type=int, default=100)
     parser.add_argument("--max_seq_len", type=int, default=512)
-    parser.add_argument("--model", type=str, default="concatbert", choices=["bow", "img", "bert", "concatbow", "concatbert", "mmbt", "vilt", "flava"])
+    parser.add_argument("--model", type=str, default="vilt", choices=["bow", "img", "bert", "concatbow", "concatbert", "mmbt", "vilt", "flava"])
     parser.add_argument("--n_workers", type=int, default=0)
-    parser.add_argument("--name", type=str, default="concat_bert_model")
+    parser.add_argument("--name", type=str, default="vilt_model")
     parser.add_argument("--num_image_embeds", type=int, default=1)
     parser.add_argument("--patience", type=int, default=10)
     parser.add_argument("--savedir", type=str, default="/home/scratch/rsaxena2/saved_models/")
@@ -64,13 +64,14 @@ def get_args(parser):
     parser.add_argument("--weight_classes", type=int, default=1)
     parser.add_argument("--regime", type=str, default="attack", choices = ["attack", "train", "test"])
     parser.add_argument("--attack_size", type=int, default=500)
+    parser.add_argument("--qbudget", type=int, default=300)
 
 
 
 def attack (args):
+    args.labels, args.label_freqs = get_labels_and_frequencies(os.path.join(args.data_path, args.task, "train.jsonl"))
     model = get_model(args)
     args.savedir = os.path.join(args.savedir,args.name)
-    args.labels, args.label_freqs = get_labels_and_frequencies(os.path.join(args.data_path, args.task, "train.jsonl"))
     load_checkpoint(model, os.path.join(args.savedir, "model_best.pt"))
     tokenizer = BertTokenizer.from_pretrained(args.bert_model, do_lower_case=True).tokenize
     test_set = TextAttackDataset(
@@ -81,15 +82,19 @@ def attack (args):
     attack_class = TextFoolerJin2019
     attack = attack_class.build(model)
     model.eval()
+    csv_file_name = args.name + '_' + str(args.qbudget) + '.csv'
+    qbudget = args.qbudget
+    if args.qbudget == -1:
+        qbudget = None
     attack_args = AttackArgs(num_examples=args.attack_size, 
-                            log_to_csv="log_to_csv.csv", \
+                            log_to_csv=csv_file_name, \
                             checkpoint_interval=100, 
                             checkpoint_dir=args.savedir, 
                             disable_stdout=True,
-                            query_budget = 300,parallel=False)
+                            query_budget = qbudget,parallel=False)
 
     attacker = Attacker(attack, my_dataset, attack_args)
-    attacker.attack.goal_function.batch_size = 2
+    attacker.attack.goal_function.batch_size = args.batch_sz
     max_percent_words = 0.3
     for i,constraint in enumerate(attacker.attack.constraints):
         if type(constraint) == textattack.constraints.overlap.max_words_perturbed.MaxWordsPerturbed:

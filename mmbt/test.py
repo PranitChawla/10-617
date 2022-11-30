@@ -24,7 +24,7 @@ from utils.utils import *
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 def get_args(parser):
-    parser.add_argument("--batch_sz", type=int, default=128)
+    parser.add_argument("--batch_sz", type=int, default=32)
     parser.add_argument("--bert_model", type=str, default="bert-base-uncased", choices=["bert-base-uncased", "bert-large-uncased"])
     parser.add_argument("--data_path", type=str, default="/home/scratch/rsaxena2/")
     parser.add_argument("--data_model_path", type=str, default="/home/scratch/rsaxena2/food101/")
@@ -45,9 +45,9 @@ def get_args(parser):
     parser.add_argument("--lr_patience", type=int, default=2)
     parser.add_argument("--max_epochs", type=int, default=100)
     parser.add_argument("--max_seq_len", type=int, default=512)
-    parser.add_argument("--model", type=str, default="flava", choices=["bow", "img", "bert", "concatbow", "concatbert", "mmbt", "vilt", "flava"])
+    parser.add_argument("--model", type=str, default="img", choices=["bow", "img", "bert", "concatbow", "concatbert", "mmbt", "vilt", "flava"])
     parser.add_argument("--n_workers", type=int, default=12)
-    parser.add_argument("--name", type=str, default="flava_model")
+    parser.add_argument("--name", type=str, default="img_train_long")
     parser.add_argument("--num_image_embeds", type=int, default=1)
     parser.add_argument("--patience", type=int, default=10)
     parser.add_argument("--savedir", type=str, default="/home/scratch/rsaxena2/saved_models/")
@@ -57,6 +57,7 @@ def get_args(parser):
     parser.add_argument("--warmup", type=float, default=0.1)
     parser.add_argument("--weight_classes", type=int, default=1)
     parser.add_argument("--regime", type=str, default="test", choices = ["attack", "train", "test"])
+    parser.add_argument("--test_size", type=int, default=500)
 
 
 def get_criterion(args):
@@ -122,6 +123,7 @@ def model_eval(i_epoch, data, model, args, criterion, store_preds=False):
 
             preds.append(pred)
             tgt = tgt.cpu().detach().numpy()
+
             tgts.append(tgt)
 
     metrics = {"loss": np.mean(losses)}
@@ -133,6 +135,7 @@ def model_eval(i_epoch, data, model, args, criterion, store_preds=False):
     else:
         tgts = [l for sl in tgts for l in sl]
         preds = [l for sl in preds for l in sl]
+        print(preds)
         metrics["acc"] = accuracy_score(tgts, preds)
 
     if store_preds:
@@ -146,8 +149,8 @@ def model_forward(i_epoch, model, args, criterion, batch):
         if args.model in ["vilt","flava"]:
             inputs, tgt = batch
             for key in list(inputs.keys()):
-                inputs[key] = inputs[key].squeeze().cuda()
-            tgt = tgt.squeeze()
+                inputs[key] = inputs[key].squeeze(dim=1).cuda()
+            tgt = tgt.squeeze(dim=1)
         else:
             txt, segment, mask, img, tgt = batch
 

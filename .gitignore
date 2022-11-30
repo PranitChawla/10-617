@@ -3,3 +3,5 @@ fb/
 screenlog.0
 saved_models/
 *.csv
+attacked_texts/
+text_fooler_logs/
