@@ -98,17 +98,16 @@ class JsonlDataset(Dataset):
     def __getitem__(self, index):
         if self.args.model in ["vilt","flava"]:
             new_path = 'images/' + ('/').join(self.data[index]["img"].split('/')[1:])
-            image = Image.open(os.path.join(self.data_dir, new_path)).convert("RGB")
-            if torch.rand(1) < self.args.image_noise_probability:
-                image = random.choice(self.noisy_transforms)(image)
-            else:
-                image = self.transforms(image)
+            orig_image = Image.open(os.path.join(self.data_dir, new_path)).convert("RGB")
+            image = self.transforms(orig_image)
             text = self.data[index]["text"]
-            if self.train_mode:
-                # print("Prev sent: ", text)
-                text = get_syn_flipped(text, self.syn_flip_prob)
-                # print("Flipped sent: ", text)
             inputs = self.tokenizer(image, text, return_tensors="pt", padding = "max_length", truncation = True, max_length = self.args.max_seq_len)
+            
+            if self.train_mode:
+                image_aug = random.choice(self.noisy_transforms)(orig_image)
+                text_aug = get_syn_flipped(text, self.syn_flip_prob)
+                inputs_aug = self.tokenizer(image_aug, text_aug, return_tensors="pt", padding = "max_length", truncation = True, max_length = self.args.max_seq_len)
+            
             if self.args.task_type == "multilabel":
                 label = torch.zeros(self.n_classes)
                 label[
@@ -118,6 +117,10 @@ class JsonlDataset(Dataset):
                 label = torch.LongTensor(
                     [self.args.labels.index(self.data[index]["label"])]
                 )
+            
+            if self.train_mode:
+                return inputs, inputs_aug, label
+               
             return inputs, label
 
         if self.args.task == "vsnli":
