@@ -99,7 +99,7 @@ class JsonlDataset(Dataset):
         if self.args.model in ["vilt","flava"]:
             new_path = 'images/' + ('/').join(self.data[index]["img"].split('/')[1:])
             image = Image.open(os.path.join(self.data_dir, new_path)).convert("RGB")
-            if torch.rand(1) < self.args.image_noise_probability:
+            if torch.rand(1) < self.args.image_noise_probability and self.train_mode:
                 image = random.choice(self.noisy_transforms)(image)
             else:
                 image = self.transforms(image)
