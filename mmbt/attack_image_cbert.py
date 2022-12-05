@@ -1,4 +1,3 @@
-from autoattack import AutoAttack
 from pytorch_pretrained_bert import BertTokenizer
 
 import sys, os
@@ -21,7 +20,7 @@ import copy
 from tqdm import tqdm
 
 def get_args(parser):
-    parser.add_argument("--batch_sz", type=int, default=32)
+    parser.add_argument("--batch_sz", type=int, default=1)
     parser.add_argument("--bert_model", type=str, default="bert-base-uncased", choices=["bert-base-uncased", "bert-large-uncased"])
     parser.add_argument("--data_path", type=str, default="/home/scratch/rsaxena2/")
     parser.add_argument("--data_model_path", type=str, default="/home/scratch/rsaxena2/food101/")
@@ -42,9 +41,9 @@ def get_args(parser):
     parser.add_argument("--lr_patience", type=int, default=2)
     parser.add_argument("--max_epochs", type=int, default=100)
     parser.add_argument("--max_seq_len", type=int, default=512)
-    parser.add_argument("--model", type=str, default="vilt", choices=["bow", "img", "bert", "concatbow", "concatbert", "mmbt", "vilt", "flava"])
-    parser.add_argument("--n_workers", type=int, default=0)
-    parser.add_argument("--name", type=str, default="vilt_model")
+    parser.add_argument("--model", type=str, default="concatbert", choices=["bow", "img", "bert", "concatbow", "concatbert", "mmbt", "vilt", "flava"])
+    parser.add_argument("--n_workers", type=int, default=8)
+    parser.add_argument("--name", type=str, default="concat_bert_model")
     parser.add_argument("--num_image_embeds", type=int, default=1)
     parser.add_argument("--patience", type=int, default=10)
     parser.add_argument("--savedir", type=str, default="/home/scratch/rsaxena2/saved_models/")
@@ -65,49 +64,63 @@ def get_args(parser):
 
 def get_probs(model, inputs, y):
     inputs_cuda = copy.deepcopy(inputs)
-    for key in list(inputs.keys()):
-        inputs_cuda[key] = inputs_cuda[key].squeeze(dim=1).cuda()
+    txt, segment, mask, img = inputs_cuda
+    txt, segment, mask, img = txt.cuda(), segment.cuda(), mask.cuda(), img.cuda()
     with torch.no_grad():
-        output = model(inputs_cuda).cpu()
+        output = model(txt, mask, segment, img).cpu()
+    
     probs = torch.index_select(F.softmax(output, dim=-1).data, 1, y)
     best_idx = torch.argmax(output)
-    return torch.diag(probs), best_idx.item()
+    top2 = torch.topk(F.softmax(output, dim=-1).data, 2)
+    return torch.diag(probs), best_idx.item(), top2.values
 
 
-def simba_single(model, x, y, num_iters=10000, epsilon=0.2, targeted=False):
-    n_dims = x['pixel_values'].view(1, -1).size(1)
+
+
+
+def simba_single(model, x, y, num_iters=1500, epsilon=0.2, targeted=False):
+    n_dims = x[3].view(1, -1).size(1)
     perm = torch.randperm(n_dims)
-    # x = x.unsqueeze(0)
-    last_prob, best_idx = get_probs(model, x, y)
-    if last_prob > 0.9:
-        print ("cant be broken")
-        return 0
+    last_prob, best_idx, top2 = get_probs(model, x, y)
+    start_first = top2[0][0]
+    start_second = top2[0][1]
+    total_iters = 10*num_iters
     pbar = tqdm(range(num_iters))
     for i in pbar:
         diff = torch.zeros(n_dims)
         diff[perm[i]] = epsilon
         x_copy_left = copy.deepcopy(x)
         x_copy_right = copy.deepcopy(x)
-        x_copy_left['pixel_values'] = x_copy_left['pixel_values'] - diff.view(x_copy_left['pixel_values'].size()).clamp(0,1)
-        x_copy_right['pixel_values'] = x_copy_right['pixel_values'] - diff.view(x_copy_right['pixel_values'].size()).clamp(0,1)
-        left_prob, best_idx = get_probs(model, x_copy_left, y)
+        x_copy_left = list(x_copy_left)
+        x_copy_right = list(x_copy_right)
+        x_copy_left[3] = x_copy_left[3] - diff.view(x_copy_left[3].size()).clamp(0,1)
+        x_copy_right[3] = x_copy_right[3] + diff.view(x_copy_right[3].size()).clamp(0,1)
+        x_copy_left = tuple(x_copy_left)
+        x_copy_right = tuple(x_copy_right)
+        left_prob, best_idx, top2 = get_probs(model, x_copy_left, y)
         if targeted != (left_prob < last_prob):
-            x['pixel_values'] = x_copy_left['pixel_values']
+            x = list(x)
+            x_copy_left = list(x_copy_left)
+            x[3] = x_copy_left[3]
+            x = tuple(x)
+            x_copy_left = tuple(x_copy_left)
             last_prob = left_prob
         else:
-            right_prob, best_idx = get_probs(model, x_copy_right, y)
+            right_prob, best_idx, top2 = get_probs(model, x_copy_right, y)
             if targeted != (right_prob < last_prob):
-                x['pixel_values'] = x_copy_right['pixel_values']
+                x = list(x)
+                x_copy_right = list(x_copy_right)
+                x[3] = x_copy_right[3]
+                x = tuple(x)
+                x_copy_right = tuple(x_copy_right)
                 last_prob = right_prob
         
         if best_idx != y.item():
             print("Broken exiting")
-            return 1
-        # if i % 100 == 0:
-        #     print(last_prob)
+            return 0
+        
         pbar.set_postfix({'last_prob': last_prob.item()})
-    return 0
-    return x.squeeze()
+    return 1
 
 
 
@@ -125,18 +138,24 @@ def attack_image(args):
         tokenizer = ViltProcessor.from_pretrained("dandelin/vilt-b32-mlm")
     elif args.model == "flava":
         tokenizer = FlavaProcessor.from_pretrained("facebook/flava-full")
-    test_set = ImageAttackDataset(data, tokenizer, transforms, args)
-
+    test_set = ImageAttackDataset(data, tokenizer, transforms, args)  
+    collate = functools.partial(collate_fn, args=args)
+    test_loader = DataLoader(
+        test_set,
+        batch_size=args.batch_sz,
+        shuffle=False,
+        num_workers=args.n_workers,
+        collate_fn=collate,
+    )
     model = get_model(args).cuda()
     model.eval()
     load_checkpoint(model, os.path.join(args.savedir, "model_best.pt"))
-    print(len(test_set))
-    broken_num = 0
-    for i in range(len(test_set)):
-        x, y= test_set[i]
-        broken_num += simba_single(model, x,y)
-        # print(y)
-    print(broken_num)
+    num_left = 0
+    for batch in test_loader:
+        fts = batch[:4]
+        label = batch[-1]
+        num_left += simba_single(model,fts,label)
+    print("Final roboust accuracy: ",num_left/args.attack_size)
 
 
 

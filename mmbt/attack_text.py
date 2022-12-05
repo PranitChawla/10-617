@@ -1,7 +1,5 @@
 from __future__ import absolute_import
 import sys, os
-# sys.path.append("textattack_lib/textattack/.")
-# sys.path.append("customattacks/.")
 from textattack.attacker import Attacker
 import ipdb
 import argparse
@@ -17,8 +15,7 @@ from textattack.constraints.pre_transformation import (
 from textattack import AttackArgs
 from textattack.datasets import HuggingFaceDataset, Dataset
 
-# import tensorflow as tf
-# os.environ["WANDB_DISABLED"] = "true"
+
 from pytorch_pretrained_bert import BertTokenizer
 from textattack.augmentation import EmbeddingAugmenter
 
@@ -52,7 +49,7 @@ def get_args(parser):
     parser.add_argument("--max_epochs", type=int, default=100)
     parser.add_argument("--max_seq_len", type=int, default=512)
     parser.add_argument("--model", type=str, default="vilt", choices=["bow", "img", "bert", "concatbow", "concatbert", "mmbt", "vilt", "flava"])
-    parser.add_argument("--n_workers", type=int, default=0)
+    parser.add_argument("--n_workers", type=int, default=8)
     parser.add_argument("--name", type=str, default="vilt_model")
     parser.add_argument("--num_image_embeds", type=int, default=1)
     parser.add_argument("--patience", type=int, default=10)

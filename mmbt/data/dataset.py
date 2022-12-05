@@ -15,19 +15,38 @@ from PIL import Image
 
 import torch
 from torch.utils.data import Dataset
-
 from utils.utils import truncate_seq_pair, numpy_seed
 # import augly.image as imaugs
 from transformers import ViltProcessor
 import torchvision.transforms as torch_transforms
 import re
+from pytorch_pretrained_bert import BertTokenizer
+from data.vocab import Vocab
+
+def get_vocab(args):
+    vocab = Vocab()
+    if args.model in ["bert", "mmbt", "concatbert"]:
+        bert_tokenizer = BertTokenizer.from_pretrained(
+            args.bert_model, do_lower_case=True
+        )
+        vocab.stoi = bert_tokenizer.vocab
+        vocab.itos = bert_tokenizer.ids_to_tokens
+        vocab.vocab_sz = len(vocab.itos)
+
+    else:
+        # word_list = get_glove_words(args.glove_path)
+        word_list = []
+        vocab.add(word_list)
+
+    return vocab
+
 
 class JsonlDataset(Dataset):
     def __init__(self, data_path, tokenizer, transforms, vocab, args):
         path = data_path.split('.jsonl')[0]+'_filtered'+'.jsonl'
         data_path = '.'.join([data_path.split('.jsonl')[0]+'_filtered','jsonl'])
         if 'test' in data_path and args.regime == "test":
-            self.data = [json.loads(l) for l in open(data_path)][:args.test_size]
+            self.data = [json.loads(l) for l in open(data_path)]
         else:
             self.data = [json.loads(l) for l in open(data_path)]
 
@@ -164,7 +183,7 @@ class TextAttackDataset(Dataset):
 
 class ImageAttackDataset(Dataset):
     def __init__(self, data,  tokenizer, transforms, args):
-        self.data = data
+        self.data = data[:args.attack_size]
         self.args = args
         if self.args.model == "vilt":
             self.max_seq_len = 40
@@ -173,6 +192,8 @@ class ImageAttackDataset(Dataset):
         self.transforms = transforms
         self.tokenizer = tokenizer
         self.data_dir = args.data_model_path
+        self.text_start_token = ["[CLS]"]
+        self.vocab = get_vocab(args)
         print(self.data.columns)
     def __len__(self):
         return len(self.data)
@@ -186,5 +207,13 @@ class ImageAttackDataset(Dataset):
         image = self.transforms(image)
         label = int(self.data.iloc[index]['ground_truth_output'])
         label = torch.LongTensor([label])
-        inputs = self.tokenizer(image, text, return_tensors="pt", padding = "max_length", truncation = True, max_length = self.args.max_seq_len)
-        return inputs, label
+        if self.args.model in ["vilt","flava"]:
+            inputs = self.tokenizer(image, text, return_tensors="pt", padding = "max_length", truncation = True, max_length = self.args.max_seq_len)
+            return inputs, label
+        else:
+            sentence = (self.text_start_token+ self.tokenizer(text)[: (self.args.max_seq_len - 1)])
+            segment = torch.zeros(len(sentence))
+            sentence = torch.LongTensor([self.vocab.stoi[w] if w in self.vocab.stoi else self.vocab.stoi["[UNK]"] for w in sentence])
+            return sentence, segment, image, label
+                    
+        
