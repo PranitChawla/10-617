@@ -8,8 +8,8 @@ Install all dependencies using the requirements.txt file after creating a conda 
 ### Model Training
 
 train.py provides the common training pipeline for all datasets. 
-- **task**: mmimdb, food101, vsnli
-- **model**: bow, img, concatbow, bert, concatbert, mmbt
+- **task**: mmimdb, food101
+- **model**: img, bert, concatbert, vilt, flava
 
 The following paths need to be set to start training.
 
