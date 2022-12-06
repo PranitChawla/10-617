@@ -59,8 +59,10 @@ def get_args(parser):
     parser.add_argument("--warmup", type=float, default=0.1)
     parser.add_argument("--weight_classes", type=int, default=1)
     parser.add_argument("--regime", type=str, default="train", choices = ["attack", "train", "test"])
+    parser.add_argument("--training_improvement", type=str, default="none", choices=["none", "augment", "contrast"])
     parser.add_argument("--text_syn_probability", type=float, default=0.3)
     parser.add_argument("--image_noise_probability", type=float, default=0.2)
+    
 
 def device_as(t1, t2):
     """
@@ -173,7 +175,7 @@ def get_criterion(args, train_mode=False):
         else:
             criterion = nn.BCEWithLogitsLoss()
     else:
-        if train_mode:
+        if train_mode and args.training_improvement == "contrast":
             criterion = TotalLoss(args.batch_sz)
         else:
             criterion = nn.CrossEntropyLoss()
@@ -248,7 +250,7 @@ def model_eval(i_epoch, data, model, args, criterion, store_preds=False):
 
 def model_forward(i_epoch, model, args, criterion, batch, train_mode=False):
     if args.model in ["vilt","flava"]:
-        if train_mode:
+        if train_mode and args.training_improvement == "contrast":
             inputs, inputs_aug, tgt = batch
         else:
             inputs, tgt = batch
@@ -281,7 +283,7 @@ def model_forward(i_epoch, model, args, criterion, batch, train_mode=False):
         out = model(txt, mask, segment, img)
     elif args.model in ["vilt","flava"]:
         out = model(inputs)
-        if train_mode:
+        if train_mode and args.training_improvement == "contrast":
             out_aug = model(inputs_aug)
     else:
         assert args.model == "mmbt"
@@ -295,7 +297,7 @@ def model_forward(i_epoch, model, args, criterion, batch, train_mode=False):
         out = model(txt, mask, segment, img)
 
     tgt = tgt.cuda()
-    if train_mode:
+    if train_mode and args.training_improvement == "contrast":
         loss = criterion(out, out_aug, tgt)
     else:
         loss = criterion(out, tgt)

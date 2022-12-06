@@ -56,8 +56,11 @@ class JsonlDataset(Dataset):
         self.data = [json.loads(l) for l in open(data_path)]
 
         self.train_mode = False
+        self.train_mode_improvement = None
         if 'train' in data_path:
             self.train_mode = True
+            if args.training_improvement in ["augment", "contrast"]:
+                self.train_mode_improvement = args.training_improvemen
         self.syn_flip_prob = args.text_syn_probability
 
         #   if 'test' in data_path:
@@ -87,10 +90,6 @@ class JsonlDataset(Dataset):
         self.noisy_transforms = noisy_transforms
         if self.args.model == "vilt" or self.args.model == "flava":
             self.transforms = torch_transforms.Compose([torch_transforms.Resize((256,256)),torch_transforms.ToTensor()])
-        
-        
-
-
     
     def __len__(self):
         return len(self.data)
@@ -99,14 +98,43 @@ class JsonlDataset(Dataset):
         if self.args.model in ["vilt","flava"]:
             new_path = 'images/' + ('/').join(self.data[index]["img"].split('/')[1:])
             orig_image = Image.open(os.path.join(self.data_dir, new_path)).convert("RGB")
-            image = self.transforms(orig_image)
             text = self.data[index]["text"]
-            inputs = self.tokenizer(image, text, return_tensors="pt", padding = "max_length", truncation = True, max_length = self.args.max_seq_len)
             
             if self.train_mode:
-                image_aug = random.choice(self.noisy_transforms)(orig_image)
-                text_aug = get_syn_flipped(text, self.syn_flip_prob)
-                inputs_aug = self.tokenizer(image_aug, text_aug, return_tensors="pt", padding = "max_length", truncation = True, max_length = self.args.max_seq_len)
+                # if == contrast {1. get aug 2. transform both}
+                # if == aug {1. flip coin and change image 2. change text 3. transform both}
+                # else {1. just transform both}
+                if self.training_improvement == "contrast":
+                    image = self.transforms(orig_image)
+                    inputs = self.tokenizer(image, text, return_tensors="pt", padding = "max_length", truncation = True, max_length = self.args.max_seq_len)
+                    image_aug = random.choice(self.noisy_transforms)(orig_image)
+                    text_aug = get_syn_flipped(text, self.syn_flip_prob)
+                    inputs_aug = self.tokenizer(image_aug, text_aug, return_tensors="pt", padding = "max_length", truncation = True, max_length = self.args.max_seq_len)
+            
+                elif self.training_improvement == "augment":
+                    if torch.rand(1) < self.args.image_noise_probability:
+                        image = random.choice(self.noisy_transforms)(orig_image)
+                    else:
+                        image = self.transforms(orig_image)
+                    text = get_syn_flipped(text, self.syn_flip_prob)
+                    inputs = self.tokenizer(image, text, return_tensors="pt", padding = "max_length", truncation = True, max_length = self.args.max_seq_len)
+                    
+                else:
+                    image = self.transforms(orig_image)
+                    inputs = self.tokenizer(image, text, return_tensors="pt", padding = "max_length", truncation = True, max_length = self.args.max_seq_len)
+                    
+            else:
+                image = self.transforms(orig_image)
+                inputs = self.tokenizer(image, text, return_tensors="pt", padding = "max_length", truncation = True, max_length = self.args.max_seq_len)
+            
+#             image = self.transforms(orig_image)
+            
+#             inputs = self.tokenizer(image, text, return_tensors="pt", padding = "max_length", truncation = True, max_length = self.args.max_seq_len)
+            
+#             if self.train_mode:
+#                 image_aug = random.choice(self.noisy_transforms)(orig_image)
+#                 text_aug = get_syn_flipped(text, self.syn_flip_prob)
+#                 inputs_aug = self.tokenizer(image_aug, text_aug, return_tensors="pt", padding = "max_length", truncation = True, max_length = self.args.max_seq_len)
             
             if self.args.task_type == "multilabel":
                 label = torch.zeros(self.n_classes)
@@ -118,10 +146,10 @@ class JsonlDataset(Dataset):
                     [self.args.labels.index(self.data[index]["label"])]
                 )
             
-            if self.train_mode:
+            if self.train_mode and self.training_improvement == "contrast":
                 return inputs, inputs_aug, label
-               
-            return inputs, label
+            else:
+                return inputs, label
 
         if self.args.task == "vsnli":
             sent1 = self.data[index]["sentence1"]
