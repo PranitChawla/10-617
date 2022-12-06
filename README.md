@@ -30,9 +30,24 @@ python mmbt/train.py --batch_sz 4 --gradient_accumulation_steps 40 \
 Example command to test:
 
 ```
-python mmbt/train.py --batch_sz 4 --gradient_accumulation_steps 40 \
+python mmbt/train.py --batch_sz 4 \
  --savedir /path/to/savedir/ --model vilt --name vilt_model \
 ```  
+
+Example command for text attacks:
+
+```
+python mmbt/attack_text.py --batch_sz 4 \
+ --savedir /path/to/savedir/ --model vilt --name vilt_model --qbudget 300\
+```  
+
+Example command for image attacks (Ensure the corresponding text attack file is saved in text_attacks folder):
+
+```
+python mmbt/attack_image_batch.py \
+ --savedir /path/to/savedir/ --model vilt --name vilt_model --qbudget 300\
+```  
+
 
 
 
