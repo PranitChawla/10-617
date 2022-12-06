@@ -22,6 +22,11 @@ import torchvision.transforms as torch_transforms
 import re
 from pytorch_pretrained_bert import BertTokenizer
 from data.vocab import Vocab
+from nltk.tokenize import word_tokenize
+from nltk.corpus import wordnet
+from nltk.corpus import stopwords
+import random
+
 
 def get_vocab(args):
     vocab = Vocab()
@@ -41,14 +46,42 @@ def get_vocab(args):
     return vocab
 
 
+stop_words = set(stopwords.words('english'))
+
+
+def get_syn_flipped(s, p=0.3):
+    word_tokens = word_tokenize(s)
+    x = []
+    for word in word_tokens:
+        if not word.isalpha():
+            x.append(word)
+        elif word.lower() in stop_words:
+            x.append(word)
+        else:
+            u = random.random()
+            if u <= p:
+                syns = list(set([i.name() for syn in wordnet.synsets(word) for i in syn.lemmas() ]))
+                if syns:
+                    x.append(random.choice(syns))
+                else:
+                    x.append(word)
+            else:
+                x.append(word)
+    return " ".join(x)
+
 class JsonlDataset(Dataset):
-    def __init__(self, data_path, tokenizer, transforms, vocab, args):
+    def __init__(self, data_path, tokenizer, transforms, vocab, args, noisy_transforms=None):
         path = data_path.split('.jsonl')[0]+'_filtered'+'.jsonl'
         data_path = '.'.join([data_path.split('.jsonl')[0]+'_filtered','jsonl'])
-        if 'test' in data_path and args.regime == "test":
-            self.data = [json.loads(l) for l in open(data_path)]
-        else:
-            self.data = [json.loads(l) for l in open(data_path)]
+        self.data = [json.loads(l) for l in open(data_path)]
+
+        self.train_mode = False
+        self.train_mode_improvement = None
+        if 'train' in data_path:
+            self.train_mode = True
+            if args.training_improvement in ["augment", "contrast"]:
+                self.train_mode_improvement = args.training_improvement
+        self.syn_flip_prob = args.text_syn_probability
 
         #   if 'test' in data_path:
         #       data_path = '../food101/test_filtered_del.jsonl'
@@ -74,13 +107,9 @@ class JsonlDataset(Dataset):
             self.max_seq_len -= args.num_image_embeds
 
         self.transforms = transforms
-
-        # if self.args.model == "vilt" or self.args.model == "flava":
-        #     self.transforms = torch_transforms.Compose([torch_transforms.Resize((256,256)),torch_transforms.ToTensor()])
-        
-        
-
-
+        self.noisy_transforms = noisy_transforms
+        if self.args.model == "vilt" or self.args.model == "flava":
+            self.transforms = torch_transforms.Compose([torch_transforms.Resize((256,256)),torch_transforms.ToTensor()])
     
     def __len__(self):
         return len(self.data)
@@ -88,10 +117,45 @@ class JsonlDataset(Dataset):
     def __getitem__(self, index):
         if self.args.model in ["vilt","flava"]:
             new_path = 'images/' + ('/').join(self.data[index]["img"].split('/')[1:])
-            image = Image.open(os.path.join(self.data_dir, new_path)).convert("RGB")
-            image = self.transforms(image)
+            orig_image = Image.open(os.path.join(self.data_dir, new_path)).convert("RGB")
             text = self.data[index]["text"]
-            inputs = self.tokenizer(image, text, return_tensors="pt", padding = "max_length", truncation = True, max_length = self.args.max_seq_len)
+            
+            if self.train_mode:
+                # if == contrast {1. get aug 2. transform both}
+                # if == aug {1. flip coin and change image 2. change text 3. transform both}
+                # else {1. just transform both}
+                if self.train_mode_improvement == "contrast":
+                    image = self.transforms(orig_image)
+                    inputs = self.tokenizer(image, text, return_tensors="pt", padding = "max_length", truncation = True, max_length = self.args.max_seq_len)
+                    image_aug = random.choice(self.noisy_transforms)(orig_image)
+                    text_aug = get_syn_flipped(text, self.syn_flip_prob)
+                    inputs_aug = self.tokenizer(image_aug, text_aug, return_tensors="pt", padding = "max_length", truncation = True, max_length = self.args.max_seq_len)
+            
+                elif self.train_mode_improvement == "augment":
+                    if torch.rand(1) < self.args.image_noise_probability:
+                        image = random.choice(self.noisy_transforms)(orig_image)
+                    else:
+                        image = self.transforms(orig_image)
+                    text = get_syn_flipped(text, self.syn_flip_prob)
+                    inputs = self.tokenizer(image, text, return_tensors="pt", padding = "max_length", truncation = True, max_length = self.args.max_seq_len)
+                    
+                else:
+                    image = self.transforms(orig_image)
+                    inputs = self.tokenizer(image, text, return_tensors="pt", padding = "max_length", truncation = True, max_length = self.args.max_seq_len)
+                    
+            else:
+                image = self.transforms(orig_image)
+                inputs = self.tokenizer(image, text, return_tensors="pt", padding = "max_length", truncation = True, max_length = self.args.max_seq_len)
+            
+#             image = self.transforms(orig_image)
+            
+#             inputs = self.tokenizer(image, text, return_tensors="pt", padding = "max_length", truncation = True, max_length = self.args.max_seq_len)
+            
+#             if self.train_mode:
+#                 image_aug = random.choice(self.noisy_transforms)(orig_image)
+#                 text_aug = get_syn_flipped(text, self.syn_flip_prob)
+#                 inputs_aug = self.tokenizer(image_aug, text_aug, return_tensors="pt", padding = "max_length", truncation = True, max_length = self.args.max_seq_len)
+            
             if self.args.task_type == "multilabel":
                 label = torch.zeros(self.n_classes)
                 label[
@@ -101,20 +165,33 @@ class JsonlDataset(Dataset):
                 label = torch.LongTensor(
                     [self.args.labels.index(self.data[index]["label"])]
                 )
-            return inputs, label
+            
+            if self.train_mode and self.train_mode_improvement == "contrast":
+                return inputs, inputs_aug, label
+            else:
+                return inputs, label
 
         if self.args.task == "vsnli":
-            sent1 = self.tokenizer(self.data[index]["sentence1"])
-            sent2 = self.tokenizer(self.data[index]["sentence2"])
+            sent1 = self.data[index]["sentence1"]
+            if self.train_mode:
+                sent1 = get_syn_flipped(sent1, self.syn_flip_prob)
+            sent1 = self.tokenizer(sent1)
+            sent2 = self.data[index]["sentence2"]
+            if self.train_mode:
+                sent2 = get_syn_flipped(sent2, self.syn_flip_prob)
+            sent2 = self.tokenizer(sent2)
             truncate_seq_pair(sent1, sent2, self.args.max_seq_len - 3)
             sentence = self.text_start_token + sent1 + ["[SEP]"] + sent2 + ["[SEP]"]
             segment = torch.cat(
                 [torch.zeros(2 + len(sent1)), torch.ones(len(sent2) + 1)]
             )
         else:
+            temp = self.data[index]["text"]
+            if self.train_mode:
+                temp = get_syn_flipped(temp, self.syn_flip_prob)
             sentence = (
                 self.text_start_token
-                + self.tokenizer(self.data[index]["text"])[
+                + self.tokenizer(temp)[
                     : (self.args.max_seq_len - 1)
                 ]
             )
@@ -146,7 +223,11 @@ class JsonlDataset(Dataset):
                 ).convert("RGB")
             else:
                 image = Image.fromarray(128 * np.ones((256, 256, 3), dtype=np.uint8))
-            image = self.transforms(image)
+
+            if torch.rand(1) < self.args.image_noise_probability and self.train_mode:
+                image = random.choice(self.noisy_transforms)(image)
+            else:
+                image = self.transforms(image)
 
         if self.args.model == "mmbt":
             # The first SEP is part of Image Token.

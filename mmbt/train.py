@@ -16,6 +16,7 @@ from tqdm import tqdm
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import torch.nn.functional as F
 from pytorch_pretrained_bert import BertAdam
 
 from data.helpers import get_data_loaders
@@ -25,7 +26,7 @@ from utils.utils import *
 
 
 def get_args(parser):
-    parser.add_argument("--batch_sz", type=int, default=8)
+    parser.add_argument("--batch_sz", type=int, default=4)
     parser.add_argument("--bert_model", type=str, default="bert-base-uncased", choices=["bert-base-uncased", "bert-large-uncased"])
     parser.add_argument("--data_path", type=str, default="/home/scratch/rsaxena2/")
     parser.add_argument("--data_model_path", type=str, default="/home/scratch/rsaxena2/food101/")
@@ -46,9 +47,9 @@ def get_args(parser):
     parser.add_argument("--lr_patience", type=int, default=2)
     parser.add_argument("--max_epochs", type=int, default=100)
     parser.add_argument("--max_seq_len", type=int, default=512)
-    parser.add_argument("--model", type=str, default="bert", choices=["bow", "img", "bert", "concatbow", "concatbert", "mmbt", "vilt", "flava"])
+    parser.add_argument("--model", type=str, default="concatbert", choices=["bow", "img", "bert", "concatbow", "concatbert", "mmbt", "vilt", "flava"])
     parser.add_argument("--n_workers", type=int, default=8)
-    parser.add_argument("--name", type=str, default="bert_train_long")
+    parser.add_argument("--name", type=str, default="concatbert_test_syn_2")
     parser.add_argument("--num_image_embeds", type=int, default=1)
     parser.add_argument("--patience", type=int, default=10)
     parser.add_argument("--savedir", type=str, default="/home/scratch/rsaxena2/saved_models/")
@@ -58,9 +59,114 @@ def get_args(parser):
     parser.add_argument("--warmup", type=float, default=0.1)
     parser.add_argument("--weight_classes", type=int, default=1)
     parser.add_argument("--regime", type=str, default="train", choices = ["attack", "train", "test"])
+    parser.add_argument("--training_improvement", type=str, default="none", choices=["none", "augment", "contrast"])
+    parser.add_argument("--text_syn_probability", type=float, default=0.3)
+    parser.add_argument("--image_noise_probability", type=float, default=0.2)
+    
 
+def device_as(t1, t2):
+    """
+    Moves t1 to the device of t2
+    """
+    return t1.to(t2.device)
 
-def get_criterion(args):
+class ContrastiveLoss(nn.Module):
+    """
+    Vanilla Contrastive loss, also called InfoNceLoss as in SimCLR paper
+    """
+    def __init__(self, batch_size, temperature=0.5):
+        super().__init__()
+#         self.batch_size = batch_size
+        self.temperature = temperature
+#         self.mask = (~torch.eye(batch_size * 2, batch_size * 2, dtype=bool)).float()
+
+    def calc_similarity_batch(self, a, b):
+        representations = torch.cat([a, b], dim=0)
+        return F.cosine_similarity(representations.unsqueeze(1), representations.unsqueeze(0), dim=2)
+
+    def forward(self, proj_1, proj_2):
+        """
+        proj_1 and proj_2 are batched embeddings [batch, embedding_dim]
+        where corresponding indices are pairs
+        z_i, z_j in the SimCLR paper
+        """
+        batch_size = proj_1.shape[0]
+        z_i = F.normalize(proj_1, p=2, dim=1)
+        z_j = F.normalize(proj_2, p=2, dim=1)
+
+        similarity_matrix = self.calc_similarity_batch(z_i, z_j)
+
+        sim_ij = torch.diag(similarity_matrix, batch_size)
+        sim_ji = torch.diag(similarity_matrix, -batch_size)
+
+        positives = torch.cat([sim_ij, sim_ji], dim=0)
+
+        nominator = torch.exp(positives / self.temperature)
+
+        mask = (~torch.eye(batch_size * 2, batch_size * 2, dtype=bool)).float()
+        denominator = device_as(mask, similarity_matrix) * torch.exp(similarity_matrix / self.temperature)
+
+        all_losses = -torch.log(nominator / torch.sum(denominator, dim=1))
+        loss = torch.sum(all_losses) / (2 * batch_size)
+        return loss    
+
+    
+# class ContrastiveLoss(nn.Module):
+#     def __init__(self, batch_size, temperature, verbose):
+#         super().__init__()
+#         self.batch_size = batch_size
+#         self.register_buffer("temperature", torch.tensor(temperature))
+#         self.verbose = verbose
+            
+#     def forward(self, emb_i, emb_j):
+#         """
+#         emb_i and emb_j are batches of embeddings, where corresponding indices are pairs
+#         z_i, z_j as per SimCLR paper
+#         """
+#         z_i = F.normalize(emb_i, dim=1)
+#         z_j = F.normalize(emb_j, dim=1)
+
+#         representations = torch.cat([z_i, z_j], dim=0)
+#         similarity_matrix = F.cosine_similarity(representations.unsqueeze(1), representations.unsqueeze(0), dim=2)
+# #         if self.verbose: print("Similarity matrix\n", similarity_matrix, "\n")
+            
+#         def l_ij(i, j):
+#             z_i_, z_j_ = representations[i], representations[j]
+#             sim_i_j = similarity_matrix[i, j]
+# #             if self.verbose: print(f"sim({i}, {j})={sim_i_j}")
+                
+#             numerator = torch.exp(sim_i_j / self.temperature)
+#             one_for_not_i = torch.ones((2 * self.batch_size, )).to(emb_i.device).scatter_(0, torch.tensor([i]).to(emb_i.device), 0.0)
+# #             if self.verbose: print(f"1{{k!={i}}}",one_for_not_i)
+            
+#             denominator = torch.sum(
+#                 one_for_not_i * torch.exp(similarity_matrix[i, :] / self.temperature)
+#             )    
+# #             if self.verbose: print("Denominator", denominator)
+                
+#             loss_ij = -torch.log(numerator / denominator)
+# #             if self.verbose: print(f"loss({i},{j})={loss_ij}\n")
+                
+#             return loss_ij.squeeze(0)
+
+#         N = self.batch_size
+#         loss = 0.0
+#         for k in range(0, N):
+#             loss += l_ij(k, k + N) + l_ij(k + N, k)
+#         return 1.0 / (2*N) * loss
+    
+    
+class TotalLoss(nn.Module):
+    def __init__(self, batch_size, temperature=0.5):
+        super().__init__()
+        self.batch_size = batch_size
+        self.CL = ContrastiveLoss(batch_size, temperature=temperature)
+        self.CE = nn.CrossEntropyLoss()
+    
+    def forward(self, emb, emb_aug, tgt):
+        return self.CL(emb, emb_aug) + self.CE(emb, tgt) + self.CE(emb_aug, tgt)
+    
+def get_criterion(args, train_mode=False):
     if args.task_type == "multilabel":
         if args.weight_classes:
             freqs = [args.label_freqs[l] for l in args.labels]
@@ -69,34 +175,16 @@ def get_criterion(args):
         else:
             criterion = nn.BCEWithLogitsLoss()
     else:
-        criterion = nn.CrossEntropyLoss()
+        if train_mode and args.training_improvement == "contrast":
+            criterion = TotalLoss(args.batch_sz)
+        else:
+            criterion = nn.CrossEntropyLoss()
 
     return criterion
 
 
 def get_optimizer(model, args):
-    if args.model in ["bert", "concatbert", "mmbt"]:
-        total_steps = (
-            args.train_data_len
-            / args.batch_sz
-            / args.gradient_accumulation_steps
-            * args.max_epochs
-        )
-        param_optimizer = list(model.named_parameters())
-        no_decay = ["bias", "LayerNorm.bias", "LayerNorm.weight"]
-        optimizer_grouped_parameters = [
-            {"params": [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)], "weight_decay": 0.01},
-            {"params": [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], "weight_decay": 0.0,},
-        ]
-        optimizer = BertAdam(
-            optimizer_grouped_parameters,
-            lr=args.lr,
-            warmup=args.warmup,
-            t_total=total_steps,
-        )
-    else:
-        optimizer = optim.Adam(model.parameters(), lr=args.lr)
-
+    optimizer = optim.Adam(model.parameters(), lr=args.lr)
     return optimizer
 
 
@@ -139,11 +227,16 @@ def model_eval(i_epoch, data, model, args, criterion, store_preds=False):
     return metrics
 
 
-def model_forward(i_epoch, model, args, criterion, batch):
+def model_forward(i_epoch, model, args, criterion, batch, train_mode=False):
     if args.model in ["vilt","flava"]:
-        inputs, tgt = batch
+        if train_mode and args.training_improvement == "contrast":
+            inputs, inputs_aug, tgt = batch
+        else:
+            inputs, tgt = batch
         for key in list(inputs.keys()):
             inputs[key] = inputs[key].squeeze().cuda()
+            if train_mode and args.training_improvement == "contrast":
+                inputs_aug[key] = inputs_aug[key].squeeze().cuda()
         tgt = tgt.squeeze()
     else:
         txt, segment, mask, img, tgt = batch
@@ -169,6 +262,8 @@ def model_forward(i_epoch, model, args, criterion, batch):
         out = model(txt, mask, segment, img)
     elif args.model in ["vilt","flava"]:
         out = model(inputs)
+        if train_mode and args.training_improvement == "contrast":
+            out_aug = model(inputs_aug)
     else:
         assert args.model == "mmbt"
         for param in model.enc.img_encoder.parameters():
@@ -181,7 +276,10 @@ def model_forward(i_epoch, model, args, criterion, batch):
         out = model(txt, mask, segment, img)
 
     tgt = tgt.cuda()
-    loss = criterion(out, tgt)
+    if train_mode and args.training_improvement == "contrast":
+        loss = criterion(out, out_aug, tgt)
+    else:
+        loss = criterion(out, tgt)
     return loss, out, tgt
 
 
@@ -194,12 +292,14 @@ def train(args):
     train_loader, val_loader, test_loaders = get_data_loaders(args)
 
     model = get_model(args)
-    criterion = get_criterion(args)
+    criterion = get_criterion(args, True)
+    criterion_eval = get_criterion(args, False)
     optimizer = get_optimizer(model, args)
     scheduler = get_scheduler(optimizer, args)
 
     logger = create_logger("%s/logfile.log" % args.savedir, args)
     logger.info(model)
+#     model = nn.DataParallel(model)
     model.cuda()
 
     torch.save(args, os.path.join(args.savedir, "args.pt"))
@@ -222,7 +322,7 @@ def train(args):
         optimizer.zero_grad()
 
         for batch in tqdm(train_loader, total=len(train_loader)):
-            loss, _, _ = model_forward(i_epoch, model, args, criterion, batch)
+            loss, _, _ = model_forward(i_epoch, model, args, criterion, batch, True)
             if args.gradient_accumulation_steps > 1:
                 loss = loss / args.gradient_accumulation_steps
 
@@ -234,7 +334,7 @@ def train(args):
                 optimizer.zero_grad()
 
         model.eval()
-        metrics = model_eval(i_epoch, val_loader, model, args, criterion)
+        metrics = model_eval(i_epoch, val_loader, model, args, criterion_eval)
         logger.info("Train Loss: {:.4f}".format(np.mean(train_losses)))
         log_metrics("Val", metrics, args, logger)
 
@@ -271,7 +371,7 @@ def train(args):
     model.eval()
     for test_name, test_loader in test_loaders.items():
         test_metrics = model_eval(
-            np.inf, test_loader, model, args, criterion, store_preds=True
+            np.inf, test_loader, model, args, criterion_eval, store_preds=True
         )
         log_metrics(f"Test - {test_name}", test_metrics, args, logger)
 

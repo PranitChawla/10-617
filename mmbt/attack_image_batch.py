@@ -59,6 +59,9 @@ def get_args(parser):
     parser.add_argument('--version', type=str, default="custom",choices = ['standard', 'plus', 'rand', 'custom'])
     parser.add_argument('--qbudget', type=int, default=300)
     parser.add_argument('--text_attack_path', type=str, default="attacked_texts")
+    parser.add_argument("--training_improvement", type=str, default="none", choices=["none", "augment", "contrast"])
+    parser.add_argument("--text_syn_probability", type=float, default=0.3)
+    parser.add_argument("--image_noise_probability", type=float, default=0.2)
 
 
 

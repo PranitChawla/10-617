@@ -24,7 +24,7 @@ from utils.utils import *
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 def get_args(parser):
-    parser.add_argument("--batch_sz", type=int, default=32)
+    parser.add_argument("--batch_sz", type=int, default=4)
     parser.add_argument("--bert_model", type=str, default="bert-base-uncased", choices=["bert-base-uncased", "bert-large-uncased"])
     parser.add_argument("--data_path", type=str, default="/home/scratch/rsaxena2/")
     parser.add_argument("--data_model_path", type=str, default="/home/scratch/rsaxena2/food101/")
@@ -45,9 +45,9 @@ def get_args(parser):
     parser.add_argument("--lr_patience", type=int, default=2)
     parser.add_argument("--max_epochs", type=int, default=100)
     parser.add_argument("--max_seq_len", type=int, default=512)
-    parser.add_argument("--model", type=str, default="img", choices=["bow", "img", "bert", "concatbow", "concatbert", "mmbt", "vilt", "flava"])
-    parser.add_argument("--n_workers", type=int, default=12)
-    parser.add_argument("--name", type=str, default="img_train_long")
+    parser.add_argument("--model", type=str, default="concatbert", choices=["bow", "img", "bert", "concatbow", "concatbert", "mmbt", "vilt", "flava"])
+    parser.add_argument("--n_workers", type=int, default=8)
+    parser.add_argument("--name", type=str, default="concat_bert_model")
     parser.add_argument("--num_image_embeds", type=int, default=1)
     parser.add_argument("--patience", type=int, default=10)
     parser.add_argument("--savedir", type=str, default="/home/scratch/rsaxena2/saved_models/")
@@ -56,8 +56,10 @@ def get_args(parser):
     parser.add_argument("--task_type", type=str, default="classification", choices=["multilabel", "classification"])
     parser.add_argument("--warmup", type=float, default=0.1)
     parser.add_argument("--weight_classes", type=int, default=1)
-    parser.add_argument("--regime", type=str, default="test", choices = ["attack", "train", "test"])
-    parser.add_argument("--test_size", type=int, default=500)
+    parser.add_argument("--regime", type=str, default="train", choices = ["attack", "train", "test"])
+    parser.add_argument("--training_improvement", type=str, default="none", choices=["none", "augment", "contrast"])
+    parser.add_argument("--text_syn_probability", type=float, default=0.3)
+    parser.add_argument("--image_noise_probability", type=float, default=0.2)
 
 
 def get_criterion(args):
